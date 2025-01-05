@@ -16,6 +16,7 @@
     "@aws-sdk/client-dynamodb": "^3.721.0",
     "@aws-sdk/client-s3": "^3.722.0",
     "@aws-sdk/client-ssm": "^3.721.0",
+    "@aws-sdk/credential-providers": "^3.721.0",
     "@aws-sdk/s3-request-presigner": "^3.722.0",
     "@types/node": "^22.10.5",
     "cors": "^2.8.5",
