@@ -1,7 +1,8 @@
 // client/src/components/VideoList.tsx
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
 import VideoPlayer from "./VideoPlayer";
+import { useGetVideosQuery } from "../services/api";
 
 interface Video {
   id: string;
@@ -75,29 +76,8 @@ const EmptyMessage = styled.div`
 `;
 
 const VideoList: React.FC = () => {
-  const [videos, setVideos] = useState<Video[]>([]);
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetchVideos();
-  }, []);
-
-  const fetchVideos = async () => {
-    try {
-      const response = await fetch("http://localhost:3000/api/videos");
-      const data = await response.json();
-
-      if (!response.ok) throw new Error(data.error);
-
-      setVideos(data.videos);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch videos");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data, error, isLoading } = useGetVideosQuery();
 
   const formatFileSize = (bytes: number) => {
     const mb = bytes / (1024 * 1024);
@@ -108,8 +88,8 @@ const VideoList: React.FC = () => {
     return key.split("/").pop() || key;
   };
 
-  if (loading) return <LoadingMessage>Loading videos...</LoadingMessage>;
-  if (error) return <ErrorMessage>Error: {error}</ErrorMessage>;
+  if (isLoading) return <LoadingMessage>Loading videos...</LoadingMessage>;
+  if (error) return <ErrorMessage>Error loading videos</ErrorMessage>;
 
   return (
     <Container>
@@ -125,7 +105,7 @@ const VideoList: React.FC = () => {
       )}
 
       <GridContainer>
-        {videos.map((video) => (
+        {data?.videos.map((video) => (
           <VideoCard key={video.id} onClick={() => setSelectedVideo(video)}>
             <VideoTitle>{formatFileName(video.key)}</VideoTitle>
             <VideoInfo>
@@ -138,7 +118,7 @@ const VideoList: React.FC = () => {
         ))}
       </GridContainer>
 
-      {videos.length === 0 && (
+      {data?.videos.length === 0 && (
         <EmptyMessage>No videos uploaded yet</EmptyMessage>
       )}
     </Container>

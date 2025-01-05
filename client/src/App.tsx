@@ -1,6 +1,9 @@
 import VideoList from "./components/VideoList";
 import VideoUpload from "./components/VideoUpload";
 import styled from "styled-components";
+import { Toaster } from "react-hot-toast";
+import { Provider } from "react-redux";
+import { store } from "./store";
 
 const AppContainer = styled.div`
   min-height: 100vh;
@@ -32,18 +35,21 @@ const Main = styled.main`
 
 function App() {
   return (
-    <AppContainer>
-      <Header>
-        <HeaderContent>
-          <HeaderTitle>SilkStream</HeaderTitle>
-        </HeaderContent>
-      </Header>
+    <Provider store={store}>
+      <AppContainer>
+        <Toaster position="top-right" />
+        <Header>
+          <HeaderContent>
+            <HeaderTitle>SilkStream</HeaderTitle>
+          </HeaderContent>
+        </Header>
 
-      <Main>
-        <VideoUpload />
-        <VideoList />
-      </Main>
-    </AppContainer>
+        <Main>
+          <VideoUpload />
+          <VideoList />
+        </Main>
+      </AppContainer>
+    </Provider>
   );
 }
 

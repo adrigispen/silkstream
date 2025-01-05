@@ -1,5 +1,8 @@
-import React, { useState } from "react";
+import React from "react";
 import styled from "styled-components";
+import { api, useGetUploadUrlMutation } from "../services/api";
+import toast from "react-hot-toast";
+import { useDispatch } from "react-redux";
 
 const UploadContainer = styled.div`
   padding: 1rem;
@@ -30,63 +33,23 @@ const FileInput = styled.input`
   }
 `;
 
-const StatusMessage = styled.p<{ status: string }>`
-  padding: 0.5rem;
-  border-radius: 0.25rem;
-  text-align: center;
-
-  ${({ status }) => {
-    switch (status) {
-      case "Upload successful!":
-        return `
-          background-color: #dcfce7;
-          color: #166534;
-        `;
-      case "Upload failed! Check console for details.":
-        return `
-          background-color: #fee2e2;
-          color: #991b1b;
-        `;
-      default:
-        return `
-          background-color: #f3f4f6;
-          color: #374151;
-        `;
-    }
-  }}
-`;
-
 const VideoUpload: React.FC = () => {
-  const [uploadStatus, setUploadStatus] = useState<string>("");
+  const [getUploadUrl] = useGetUploadUrlMutation();
+  const dispatch = useDispatch();
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     try {
-      setUploadStatus("Getting upload URL...");
+      const { url } = await getUploadUrl({
+        fileName: file.name,
+        fileType: file.type,
+        file,
+      }).unwrap();
 
-      // Get pre-signed URL from our backend
-      const urlResponse = await fetch(
-        "http://localhost:3000/api/get-upload-url",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            fileName: file.name,
-            fileType: file.type,
-          }),
-        }
-      );
-
-      const { url } = await urlResponse.json();
-
-      setUploadStatus("Uploading to S3...");
-
-      // Upload directly to S3 using the pre-signed URL
-      const uploadResponse = await fetch(url, {
+      // Create the actual upload promise
+      const uploadPromise = fetch(url, {
         method: "PUT",
         body: file,
         headers: {
@@ -94,23 +57,27 @@ const VideoUpload: React.FC = () => {
         },
       });
 
-      if (uploadResponse.ok) {
-        setUploadStatus("Upload successful!");
-      } else {
+      // Show toast for the actual upload
+      await toast.promise(uploadPromise, {
+        loading: "Uploading video...",
+        success: "Video uploaded successfully!",
+        error: "Upload failed",
+      });
+
+      if (!(await uploadPromise).ok) {
         throw new Error("Upload failed");
       }
+
+      // Invalidate and refetch videos after successful S3 upload
+      dispatch(api.util.invalidateTags(["Videos"]));
     } catch (error) {
       console.error("Upload error:", error);
-      setUploadStatus("Upload failed! Check console for details.");
     }
   };
 
   return (
     <UploadContainer>
       <FileInput type="file" accept="video/*" onChange={handleFileChange} />
-      {uploadStatus && (
-        <StatusMessage status={uploadStatus}>{uploadStatus}</StatusMessage>
-      )}
     </UploadContainer>
   );
 };
