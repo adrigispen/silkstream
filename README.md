@@ -4,9 +4,12 @@ A personal video storage and streaming application built with React, TypeScript,
 
 #### Next steps:
 
-- Allow filtering and searching for videos
-- Add validation for saving metadata
-- Rethink UX
+1. Add validation for saving metadata
+2. UX improvements
+   - Add video thumbnails
+   - List view should use video title, not original file name
+   - Add metadata on upload, or at least title
+   - Allow filtering and searching for videos
 
 ## Prerequisites
 
