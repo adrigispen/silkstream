@@ -1,16 +1,9 @@
-// client/src/components/VideoList.tsx
 import React, { useState } from "react";
 import styled from "styled-components";
 import VideoPlayer from "./VideoPlayer";
+import VideoMetadataForm from "./VideoMetadataForm";
 import { useGetVideosQuery } from "../services/api";
-
-interface Video {
-  id: string;
-  key: string;
-  url: string;
-  lastModified: string;
-  size: number;
-}
+import { Video } from "../types/video";
 
 const Container = styled.div`
   margin: 0 auto;
@@ -95,12 +88,18 @@ const VideoList: React.FC = () => {
   return (
     <Container>
       {selectedVideo ? (
-        <VideoPlayerWrapper>
-          <VideoPlayer
-            url={selectedVideo.url}
-            title={formatFileName(selectedVideo.key)}
+        <FlexContainer>
+          <VideoPlayerWrapper>
+            <VideoPlayer
+              url={selectedVideo.url}
+              title={formatFileName(selectedVideo.key)}
+            />
+          </VideoPlayerWrapper>
+          <VideoMetadataForm
+            videoId={selectedVideo.id}
+            initialMetadata={selectedVideo.metadata}
           />
-        </VideoPlayerWrapper>
+        </FlexContainer>
       ) : (
         <Image src="/hang.svg" />
       )}

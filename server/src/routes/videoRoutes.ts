@@ -10,10 +10,14 @@ export function createVideoRouter(awsServices: AwsServices) {
 
   router.post("/get-upload-url", videoController.getUploadUrl);
   router.get("/videos", videoController.listVideos);
-  
+
   router.post("/videos/:videoId/metadata", metadataController.saveMetadata);
   router.get("/videos/:videoId/metadata", metadataController.getMetadata);
-  router.patch("/videos/:videoId/metadata", metadataController.updateMetadata);
+  router.patch("/videos/:videoId/metadata", (req, res) => {
+    // Decode the videoId parameter
+    req.params.videoId = decodeURIComponent(req.params.videoId);
+    return metadataController.updateMetadata(req, res);
+  });
 
   return router;
 }

@@ -1,23 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-
-interface VideoMetadata {
-  id: string;
-  title: string;
-  description?: string;
-  tags?: string[];
-  category?: string;
-  originalFileName: string;
-  s3Key: string;
-  uploadDate: string;
-}
-
-interface Video {
-  id: string;
-  key: string;
-  url: string;
-  lastModified: string;
-  size: number;
-}
+import { Video, VideoMetadata } from "../types/video";
 
 interface UploadUrlResponse {
   url: string;
@@ -43,7 +25,7 @@ export const api = createApi({
       { videoId: string; metadata: Partial<VideoMetadata> }
     >({
       query: ({ videoId, metadata }) => ({
-        url: `videos/${videoId}.metadata`,
+        url: `videos/${encodeURIComponent(videoId)}/metadata`,
         method: "PATCH",
         body: metadata,
       }),
