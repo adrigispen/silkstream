@@ -1,13 +1,19 @@
-// server/src/index.ts
 import express, { Request, Response } from "express";
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import {
+  S3Client,
+  PutObjectCommand,
+  ListObjectsV2Command,
+  GetObjectCommand,
+} from "@aws-sdk/client-s3";
 import { SSMClient, GetParameterCommand } from "@aws-sdk/client-ssm";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { fromIni } from "@aws-sdk/credential-providers";
 import cors from "cors";
 import dotenv from "dotenv";
 
 const ssmClient = new SSMClient({
   region: "eu-central-1",
+  credentials: fromIni({ profile: "personal" }),
 });
 
 async function getParameter(name: string): Promise<string> {
@@ -92,6 +98,50 @@ async function startServer() {
             error: "Failed to generate upload URL",
             details: error instanceof Error ? error.message : "Unknown error",
           });
+        }
+      }
+    );
+
+    app.get(
+      "/api/videos",
+      async (_req: Request, res: Response): Promise<any> => {
+        try {
+          const command = new ListObjectsV2Command({
+            Bucket: bucketName,
+            Prefix: "uploads/",
+          });
+
+          const response = await s3Client.send(command);
+
+          if (!response.Contents) {
+            return res.json({ videos: [] });
+          }
+
+          const videos = await Promise.all(
+            response.Contents.map(async (object) => {
+              const signedUrl = await getSignedUrl(
+                s3Client,
+                new GetObjectCommand({
+                  Bucket: bucketName,
+                  Key: object.Key,
+                }),
+                { expiresIn: 3600 }
+              );
+
+              return {
+                id: object.Key,
+                key: object.Key,
+                url: signedUrl,
+                lastModified: object.LastModified,
+                size: object.Size,
+              };
+            })
+          );
+
+          res.json({ videos });
+        } catch (error) {
+          console.error("Error listing videos:", error);
+          res.status(500).json({ error: "Failed to list videos" });
         }
       }
     );
