@@ -1,94 +1,117 @@
-import React, { useState, useRef } from "react";
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import { UploadProgress } from "../types/video";
+import React, { useState } from "react";
+import styled from "styled-components";
+
+const UploadContainer = styled.div`
+  padding: 1rem;
+  border-radius: 0.5rem;
+  background-color: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+`;
+
+const FileInput = styled.input`
+  width: 100%;
+  padding: 0.5rem;
+  margin-bottom: 1rem;
+
+  &::file-selector-button {
+    padding: 0.5rem 1rem;
+    margin-right: 1rem;
+    border: none;
+    border-radius: 0.25rem;
+    background-color: #3b82f6;
+    color: white;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background-color: #2563eb;
+    }
+  }
+`;
+
+const StatusMessage = styled.p<{ status: string }>`
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  text-align: center;
+
+  ${({ status }) => {
+    switch (status) {
+      case "Upload successful!":
+        return `
+          background-color: #dcfce7;
+          color: #166534;
+        `;
+      case "Upload failed! Check console for details.":
+        return `
+          background-color: #fee2e2;
+          color: #991b1b;
+        `;
+      default:
+        return `
+          background-color: #f3f4f6;
+          color: #374151;
+        `;
+    }
+  }}
+`;
 
 const VideoUpload: React.FC = () => {
-  const [progress, setProgress] = useState<UploadProgress>({
-    progress: 0,
-    status: "idle",
-  });
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadStatus, setUploadStatus] = useState<string>("");
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file && file.type.startsWith("video/")) {
-      setSelectedFile(file);
-      setProgress({ progress: 0, status: "idle" });
-    }
-  };
-
-  const handleUpload = async () => {
-    if (!selectedFile) return;
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
     try {
-      setProgress({ progress: 0, status: "uploading" });
+      setUploadStatus("Getting upload URL...");
 
-      // TODO: Replace with your S3 bucket details and credentials management
-      const s3Client = new S3Client({
-        region: import.meta.env.VITE_AWS_REGION,
-        credentials: {
-          accessKeyId: import.meta.env.VITE_AWS_ACCESS_KEY_ID,
-          secretAccessKey: import.meta.env.VITE_AWS_SECRET_ACCESS_KEY,
+      // Get pre-signed URL from our backend
+      const urlResponse = await fetch(
+        "http://localhost:3000/api/get-upload-url",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            fileName: file.name,
+            fileType: file.type,
+          }),
+        }
+      );
+
+      const { url } = await urlResponse.json();
+
+      setUploadStatus("Uploading to S3...");
+
+      // Upload directly to S3 using the pre-signed URL
+      const uploadResponse = await fetch(url, {
+        method: "PUT",
+        body: file,
+        headers: {
+          "Content-Type": file.type,
         },
       });
 
-      const command = new PutObjectCommand({
-        Bucket: import.meta.env.VITE_AWS_BUCKET_NAME,
-        Key: `videos/${Date.now()}-${selectedFile.name}`,
-        Body: selectedFile,
-        ContentType: selectedFile.type,
-      });
-
-      await s3Client.send(command);
-
-      setProgress({ progress: 100, status: "completed" });
+      if (uploadResponse.ok) {
+        setUploadStatus("Upload successful!");
+      } else {
+        throw new Error("Upload failed");
+      }
     } catch (error) {
       console.error("Upload error:", error);
-      setProgress({
-        progress: 0,
-        status: "error",
-        error: "Failed to upload video",
-      });
+      setUploadStatus("Upload failed! Check console for details.");
     }
   };
 
   return (
-    <div>
-      <input
-        type="file"
-        accept="video/*"
-        onChange={handleFileSelect}
-        ref={fileInputRef}
-        className="hidden"
-      />
-
-      <div>
-        <button onClick={() => fileInputRef.current?.click()}>
-          Select Video
-        </button>
-
-        {selectedFile && (
-          <div>
-            <p>{selectedFile.name}</p>
-            <button
-              onClick={handleUpload}
-              disabled={progress.status === "uploading"}
-            >
-              {progress.status === "uploading" ? "Uploading..." : "Upload"}
-            </button>
-          </div>
-        )}
-
-        {progress.status === "uploading" && (
-          <div>
-            <div style={{ width: `${progress.progress}%` }} />
-          </div>
-        )}
-
-        {progress.status === "error" && <p>{progress.error}</p>}
-      </div>
-    </div>
+    <UploadContainer>
+      <FileInput type="file" accept="video/*" onChange={handleFileChange} />
+      {uploadStatus && (
+        <StatusMessage status={uploadStatus}>{uploadStatus}</StatusMessage>
+      )}
+    </UploadContainer>
   );
 };
 
