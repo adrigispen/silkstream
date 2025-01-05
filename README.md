@@ -70,6 +70,6 @@ Frontend will run on http://localhost:5173
 
 ## Technologies Used
 
-Frontend: React, TypeScript, Vite
-Backend: Node.js, Express, TypeScript
-Cloud: AWS (S3, Parameter Store)
+- Frontend: React, TypeScript, Vite
+- Backend: Node.js, Express, TypeScript
+- Cloud: AWS (S3, Parameter Store)
