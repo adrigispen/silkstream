@@ -1,41 +1,37 @@
-import React from "react";
+import React, { useRef } from "react";
 import styled from "styled-components";
 import { api, useGetUploadUrlMutation } from "../services/api";
 import toast from "react-hot-toast";
 import { useDispatch } from "react-redux";
 
-const UploadContainer = styled.div`
-  padding: 1rem;
-  border-radius: 0.5rem;
-  background-color: white;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-`;
+const UploadButton = styled.button`
+  padding: 0.5rem 1rem;
+  background-color: darkgoldenrod;
+  max-height: 45px;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
 
-const FileInput = styled.input`
-  width: 100%;
-  padding: 0.5rem;
-  margin-bottom: 1rem;
-
-  &::file-selector-button {
-    padding: 0.5rem 1rem;
-    margin-right: 1rem;
-    border: none;
-    border-radius: 0.25rem;
-    background-color: #3b82f6;
+  &:hover {
+    background-color: goldenrod;
     color: white;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 0.2s;
-
-    &:hover {
-      background-color: #2563eb;
-    }
   }
 `;
 
+const HiddenInput = styled.input`
+  display: none;
+`;
 const VideoUpload: React.FC = () => {
   const [getUploadUrl] = useGetUploadUrlMutation();
   const dispatch = useDispatch();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleButtonClick = () => {
+    fileInputRef.current?.click();
+  };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -76,9 +72,15 @@ const VideoUpload: React.FC = () => {
   };
 
   return (
-    <UploadContainer>
-      <FileInput type="file" accept="video/*" onChange={handleFileChange} />
-    </UploadContainer>
+    <>
+      <UploadButton onClick={handleButtonClick}>Upload Video</UploadButton>
+      <HiddenInput
+        ref={fileInputRef}
+        type="file"
+        accept="video/*"
+        onChange={handleFileChange}
+      />
+    </>
   );
 };
 

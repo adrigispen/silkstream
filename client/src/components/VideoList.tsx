@@ -13,8 +13,12 @@ interface Video {
 }
 
 const Container = styled.div`
-  padding: 1rem;
   margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: center;
+  justify-content: center;
 `;
 
 const LoadingMessage = styled.div`
@@ -31,23 +35,20 @@ const VideoPlayerWrapper = styled.div`
   margin-bottom: 2rem;
 `;
 
-const GridContainer = styled.div`
-  display: grid;
+const Image = styled.img`
+  max-height: 50vh;
+`;
+
+const FlexContainer = styled.div`
+  display: flex;
+  flex-wrap: wrap;
   gap: 1rem;
-
-  @media (min-width: 768px) {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  @media (min-width: 1024px) {
-    grid-template-columns: repeat(3, 1fr);
-  }
 `;
 
 const VideoCard = styled.div`
   border: 1px solid #e5e7eb;
   border-radius: 0.5rem;
-  padding: 1rem;
+  padding: 0.5rem;
   cursor: pointer;
   transition: background-color 0.2s;
 
@@ -101,10 +102,9 @@ const VideoList: React.FC = () => {
           />
         </VideoPlayerWrapper>
       ) : (
-        <img src="/hang.svg" />
+        <Image src="/hang.svg" />
       )}
-
-      <GridContainer>
+      <FlexContainer>
         {data?.videos.map((video) => (
           <VideoCard key={video.id} onClick={() => setSelectedVideo(video)}>
             <VideoTitle>{formatFileName(video.key)}</VideoTitle>
@@ -116,7 +116,7 @@ const VideoList: React.FC = () => {
             </VideoInfo>
           </VideoCard>
         ))}
-      </GridContainer>
+      </FlexContainer>
 
       {data?.videos.length === 0 && (
         <EmptyMessage>No videos uploaded yet</EmptyMessage>

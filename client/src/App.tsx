@@ -16,13 +16,15 @@ const Header = styled.header`
 `;
 
 const HeaderContent = styled.div`
-  max-width: 80rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin: 0 auto;
-  padding: 1.5rem 1rem;
+  padding: 1rem 1rem;
 `;
 
 const HeaderTitle = styled.h1`
-  font-size: 1.875rem;
+  font-size: 1.8rem;
   font-weight: bold;
   color: #111827;
 `;
@@ -30,7 +32,10 @@ const HeaderTitle = styled.h1`
 const Main = styled.main`
   max-width: 80rem;
   margin: 0 auto;
-  padding: 1.5rem 1rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 `;
 
 function App() {
@@ -41,11 +46,10 @@ function App() {
         <Header>
           <HeaderContent>
             <HeaderTitle>SilkStream</HeaderTitle>
+            <VideoUpload />
           </HeaderContent>
         </Header>
-
         <Main>
-          <VideoUpload />
           <VideoList />
         </Main>
       </AppContainer>

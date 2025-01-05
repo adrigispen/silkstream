@@ -10,6 +10,10 @@ const Container = styled.div`
   width: 100%;
   max-width: 64rem;
   margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-contents: center;
 `;
 
 const VideoWrapper = styled.div`
@@ -21,15 +25,15 @@ const VideoWrapper = styled.div`
 `;
 
 const StyledVideo = styled.video`
-  width: 100%;
-  transform: rotate(180deg);
+  max-height: 80vh;
+  transform: rotate180deg;
   transform-origin: center;
   display: block;
   border-radius: 0.5rem;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 
   &::-webkit-media-controls-panel {
-    transform: rotate(180deg);
+    transform: rotate180deg;
   }
 `;
 
