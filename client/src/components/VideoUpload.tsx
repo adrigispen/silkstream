@@ -41,7 +41,6 @@ const VideoUpload: React.FC = () => {
       const { url } = await getUploadUrl({
         fileName: file.name,
         fileType: file.type,
-        file,
       }).unwrap();
 
       // Create the actual upload promise

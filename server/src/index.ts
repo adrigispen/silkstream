@@ -1,155 +1,27 @@
-import express, { Request, Response } from "express";
-import {
-  S3Client,
-  PutObjectCommand,
-  ListObjectsV2Command,
-  GetObjectCommand,
-} from "@aws-sdk/client-s3";
-import { SSMClient, GetParameterCommand } from "@aws-sdk/client-ssm";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { fromIni } from "@aws-sdk/credential-providers";
+import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
-
-const ssmClient = new SSMClient({
-  region: "eu-central-1",
-  credentials: fromIni({ profile: "personal" }),
-});
-
-async function getParameter(name: string): Promise<string> {
-  const command = new GetParameterCommand({
-    Name: name,
-    WithDecryption: true,
-  });
-
-  const response = await ssmClient.send(command);
-  if (!response.Parameter?.Value) {
-    throw new Error(`Parameter ${name} not found`);
-  }
-  return response.Parameter.Value;
-}
-
-const app = express();
-
-dotenv.config();
-
-app.use(
-  cors({
-    origin: "http://localhost:5173",
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type"],
-  })
-);
-
-app.use(express.json());
+import { createVideoRouter } from "./routes/videoRoutes";
+import { initializeAwsServices } from "./config/aws";
 
 async function startServer() {
   try {
-    // Get parameters from SSM
-    const accessKeyId = await getParameter("/silkstream/aws-access-key-id");
-    const secretAccessKey = await getParameter(
-      "/silkstream/aws-secret-access-key"
-    );
-    const bucketName = await getParameter("/silkstream/bucket-name");
+    const awsServices = await initializeAwsServices();
+    const app = express();
 
-    const s3Client = new S3Client({
-      region: process.env.AWS_REGION || "eu-central-1",
-      credentials: {
-        accessKeyId,
-        secretAccessKey,
-      },
-    });
-
-    app.post(
-      "/api/get-upload-url",
-      async (req: Request, res: Response): Promise<any> => {
-        try {
-          console.log("Received request:", req.body);
-          const { fileName, fileType } = req.body;
-
-          if (!fileName || !fileType) {
-            console.log("Missing required fields:", { fileName, fileType });
-            return res
-              .status(400)
-              .json({ error: "Missing fileName or fileType" });
-          }
-
-          const key = `uploads/${Date.now()}-${fileName}`;
-          console.log("Generating signed URL for:", { key, fileType });
-
-          const command = new PutObjectCommand({
-            Bucket: bucketName,
-            Key: key,
-            ContentType: fileType,
-          });
-
-          const signedUrl = await getSignedUrl(s3Client, command, {
-            expiresIn: 3600,
-          });
-          console.log("Successfully generated signed URL");
-
-          res.json({
-            url: signedUrl,
-            key,
-          });
-        } catch (error) {
-          console.error("Detailed error:", error);
-          res.status(500).json({
-            error: "Failed to generate upload URL",
-            details: error instanceof Error ? error.message : "Unknown error",
-          });
-        }
-      }
+    app.use(
+      cors({
+        origin: "http://localhost:5173",
+        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allowedHeaders: ["Content-Type"],
+      })
     );
 
-    app.get(
-      "/api/videos",
-      async (_req: Request, res: Response): Promise<any> => {
-        try {
-          const command = new ListObjectsV2Command({
-            Bucket: bucketName,
-            Prefix: "uploads/",
-          });
-
-          const response = await s3Client.send(command);
-
-          if (!response.Contents) {
-            return res.json({ videos: [] });
-          }
-
-          const videos = await Promise.all(
-            response.Contents.map(async (object) => {
-              const signedUrl = await getSignedUrl(
-                s3Client,
-                new GetObjectCommand({
-                  Bucket: bucketName,
-                  Key: object.Key,
-                }),
-                { expiresIn: 3600 }
-              );
-
-              return {
-                id: object.Key,
-                key: object.Key,
-                url: signedUrl,
-                lastModified: object.LastModified,
-                size: object.Size,
-              };
-            })
-          );
-
-          res.json({ videos });
-        } catch (error) {
-          console.error("Error listing videos:", error);
-          res.status(500).json({ error: "Failed to list videos" });
-        }
-      }
-    );
+    app.use(express.json());
+    app.use("/api", createVideoRouter(awsServices));
 
     const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
-      console.log("Successfully loaded parameters from SSM");
     });
   } catch (error) {
     console.error("Failed to start server:", error);
