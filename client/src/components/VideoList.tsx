@@ -63,6 +63,20 @@ const VideoInfo = styled.div`
   margin-top: 0.25rem;
 `;
 
+const Tags = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+`;
+
+const Tag = styled.span`
+  background-color: #e5e7eb;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  color: #4b5563;
+`;
 const EmptyMessage = styled.div`
   text-align: center;
   color: #6b7280;
@@ -72,11 +86,6 @@ const EmptyMessage = styled.div`
 const VideoList: React.FC = () => {
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
   const { data, error, isLoading } = useGetVideosQuery();
-
-  const formatFileSize = (bytes: number) => {
-    const mb = bytes / (1024 * 1024);
-    return `${mb.toFixed(1)} MB`;
-  };
 
   const formatFileName = (key: string) => {
     return key.split("/").pop() || key;
@@ -107,13 +116,21 @@ const VideoList: React.FC = () => {
       <FlexContainer>
         {data?.videos.map((video) => (
           <VideoCard key={video.id} onClick={() => setSelectedVideo(video)}>
-            <VideoTitle>{formatFileName(video.key)}</VideoTitle>
+            <VideoTitle>
+              {video.metadata?.title || formatFileName(video.key)}
+            </VideoTitle>
             <VideoInfo>
-              <p>Size: {formatFileSize(video.size)}</p>
-              <p>
-                Uploaded: {new Date(video.lastModified).toLocaleDateString()}
-              </p>
+              {video.metadata?.category && (
+                <p>Category: {video.metadata.category}</p>
+              )}
             </VideoInfo>
+            {video.metadata?.tags && video.metadata.tags.length > 0 && (
+              <Tags>
+                {video.metadata.tags.map((tag) => (
+                  <Tag key={tag}>{tag}</Tag>
+                ))}
+              </Tags>
+            )}
           </VideoCard>
         ))}
       </FlexContainer>

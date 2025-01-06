@@ -1,7 +1,12 @@
-import React from "react";
+import React, { useCallback } from "react";
 import styled from "styled-components";
-import { useUpdateVideoMetadataMutation } from "../services/api";
+import debounce from "lodash/debounce";
+import {
+  useLazyGetTagSuggestionsQuery,
+  useUpdateVideoMetadataMutation,
+} from "../services/api";
 import { toast } from "react-hot-toast";
+import { TagSuggestion } from "../types/video";
 
 const Form = styled.form`
   display: flex;
@@ -83,7 +88,7 @@ const RemoveTag = styled.button`
 
 const Button = styled.button`
   padding: 0.5rem 1rem;
-  background-color: #3b82f6;
+  background-color: darkgoldenrod;
   color: white;
   border: none;
   border-radius: 0.375rem;
@@ -91,13 +96,58 @@ const Button = styled.button`
   cursor: pointer;
 
   &:hover {
-    background-color: #2563eb;
+    background-color: goldenrod;
   }
 
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
   }
+`;
+
+const SuggestionsList = styled.ul`
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: white;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  margin-top: 0.25rem;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+`;
+
+const SuggestionItem = styled.li`
+  padding: 0.5rem;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  &:hover {
+    background-color: #f3f4f6;
+  }
+
+  span.count {
+    color: #6b7280;
+    font-size: 0.875rem;
+  }
+`;
+
+const TagInputContainer = styled.div`
+  position: relative;
+`;
+
+const LoadingIndicator = styled.div`
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6b7280;
+  font-size: 0.875rem;
 `;
 
 interface VideoMetadataFormProps {
@@ -122,6 +172,39 @@ const VideoMetadataForm: React.FC<VideoMetadataFormProps> = ({
     category: initialMetadata?.category || "",
   });
   const [tagInput, setTagInput] = React.useState("");
+  const [suggestions, setSuggestions] = React.useState<TagSuggestion[]>([]);
+  const [getTagSuggestions, { isFetching }] = useLazyGetTagSuggestionsQuery();
+
+  const debouncedFetchSuggestions = useCallback(
+    debounce(async (prefix: string) => {
+      if (prefix.length >= 1) {
+        try {
+          const result = await getTagSuggestions(prefix).unwrap();
+          setSuggestions(result.suggestions);
+        } catch (error) {
+          console.error("Failed to fetch suggestions:", error);
+          setSuggestions([]);
+        }
+      } else {
+        setSuggestions([]);
+      }
+    }, 300),
+    [getTagSuggestions]
+  );
+
+  const handleTagInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setTagInput(value);
+    debouncedFetchSuggestions(value);
+  };
+
+  const handleSuggestionClick = (tag: string) => {
+    if (!formData.tags.includes(tag)) {
+      setFormData((prev) => ({ ...prev, tags: [...prev.tags, tag] }));
+    }
+    setTagInput("");
+    setSuggestions([]);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -155,6 +238,12 @@ const VideoMetadataForm: React.FC<VideoMetadataFormProps> = ({
       tags: prev.tags.filter((tag) => tag !== tagToRemove),
     }));
   };
+
+  React.useEffect(() => {
+    const handleClickOutside = () => setSuggestions([]);
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, []);
 
   return (
     <Form onSubmit={handleSubmit}>
@@ -196,13 +285,34 @@ const VideoMetadataForm: React.FC<VideoMetadataFormProps> = ({
 
       <FormGroup>
         <Label htmlFor="tags">Tags</Label>
-        <TagInput
-          id="tags"
-          value={tagInput}
-          onChange={(e) => setTagInput(e.target.value)}
-          onKeyDown={handleAddTag}
-          placeholder="Type a tag and press Enter"
-        />
+        <TagInputContainer>
+          <TagInput
+            id="tags"
+            value={tagInput}
+            onChange={handleTagInputChange}
+            onKeyDown={handleAddTag}
+            placeholder="Type a tag and press Enter"
+          />
+          {isFetching && tagInput.length >= 3 && (
+            <LoadingIndicator>Loading...</LoadingIndicator>
+          )}
+          {!isFetching && suggestions.length > 0 && (
+            <SuggestionsList>
+              {suggestions.map(({ tag, count }) => (
+                <SuggestionItem
+                  key={tag}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSuggestionClick(tag);
+                  }}
+                >
+                  <span>{tag}</span>
+                  <span className="count">Used {count} times</span>
+                </SuggestionItem>
+              ))}
+            </SuggestionsList>
+          )}
+        </TagInputContainer>
         <TagList>
           {formData.tags.map((tag) => (
             <Tag key={tag}>
@@ -216,7 +326,7 @@ const VideoMetadataForm: React.FC<VideoMetadataFormProps> = ({
       </FormGroup>
 
       <Button type="submit" disabled={isLoading}>
-        {isLoading ? "Saving..." : "Save Metadata"}
+        {isLoading ? "Saving..." : "Save"}
       </Button>
     </Form>
   );

@@ -18,6 +18,7 @@ export function createVideoRouter(awsServices: AwsServices) {
     req.params.videoId = decodeURIComponent(req.params.videoId);
     return metadataController.updateMetadata(req, res);
   });
+  router.get("/tags/suggest", metadataController.getTagSuggestions);
 
   return router;
 }

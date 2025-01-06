@@ -46,11 +46,35 @@ export class MetadataController {
   updateMetadata = async (req: Request, res: Response) => {
     try {
       const { videoId } = req.params;
-      await this.dynamoService.updateMetadata(videoId, req.body);
+      const updates = req.body;
+
+      const existingData = await this.dynamoService.getMetadata(videoId);
+      const oldTags = existingData.Item?.tags || [];
+      const newTags = updates.tags || [];
+
+      await this.dynamoService.updateTagsForVideo(oldTags, newTags);
+
+      await this.dynamoService.updateMetadata(videoId, updates);
+
       res.json({ success: true });
     } catch (error) {
       console.error("Error updating metadata:", error);
       res.status(500).json({ error: "Failed to update metadata" });
+    }
+  };
+
+  getTagSuggestions = async (req: Request, res: Response): Promise<any> => {
+    try {
+      const { prefix = "" } = req.query;
+      if (typeof prefix !== "string") {
+        return res.status(400).json({ error: "Invalid prefix parameter" });
+      }
+
+      const suggestions = await this.dynamoService.getSuggestions(prefix);
+      res.json({ suggestions });
+    } catch (error) {
+      console.error("Error getting tag suggestions:", error);
+      res.status(500).json({ error: "Failed to get tag suggestions" });
     }
   };
 }

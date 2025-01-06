@@ -23,3 +23,9 @@ export interface UploadProgress {
   status: "idle" | "uploading" | "completed" | "error";
   error?: string;
 }
+
+export interface TagSuggestion {
+  tag: string;
+  count: number;
+  lastUsed: string;
+}

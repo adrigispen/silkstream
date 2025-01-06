@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { Video, VideoMetadata } from "../types/video";
+import { Video, VideoMetadata, TagSuggestion } from "../types/video";
 
 interface UploadUrlResponse {
   url: string;
@@ -45,6 +45,9 @@ export const api = createApi({
       }),
       invalidatesTags: ["Videos"],
     }),
+    getTagSuggestions: builder.query<{ suggestions: TagSuggestion[] }, string>({
+      query: (prefix) => `tags/suggest?prefix=${encodeURIComponent(prefix)}`,
+    }),
   }),
 });
 
@@ -53,4 +56,6 @@ export const {
   useGetVideoMetadataQuery,
   useUpdateVideoMetadataMutation,
   useGetUploadUrlMutation,
+  useGetTagSuggestionsQuery,
+  useLazyGetTagSuggestionsQuery,
 } = api;
