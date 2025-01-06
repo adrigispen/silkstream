@@ -7,6 +7,7 @@ import {
 import type { AwsServices } from "../config/aws";
 import { VideoMetadata } from "../types/video";
 import { TagRecord } from "../types/tag";
+import { ScanCommand } from "@aws-sdk/lib-dynamodb";
 
 export class DynamoService {
   constructor(private readonly services: AwsServices) {}
@@ -71,9 +72,10 @@ export class DynamoService {
           TableName: "silkstream-tags",
           Key: { tag },
           UpdateExpression:
-            "SET #count = if_not_exists(#count, :zero) :change, lastUsed = :now",
+            "SET #count = if_not_exists(#count, :zero) + :change, #lastUsed = :now",
           ExpressionAttributeNames: {
             "#count": "count",
+            "#lastUsed": "lastUsed",
           },
           ExpressionAttributeValues: {
             ":change": increment ? 1 : -1,
@@ -90,18 +92,18 @@ export class DynamoService {
 
   async getSuggestions(prefix: string): Promise<TagRecord[]> {
     try {
-      // Scan for tags that begin with the prefix
       const result = await this.services.docClient.send(
-        new QueryCommand({
+        new ScanCommand({
           TableName: "silkstream-tags",
-          KeyConditionExpression: "begins_with(tag, :prefix)",
+          FilterExpression: "begins_with(tag, :prefix)",
           ExpressionAttributeValues: {
             ":prefix": prefix.toLowerCase(),
           },
-          Limit: 10, // Limit suggestions to 10
+          Limit: 10,
         })
       );
 
+      console.log(result.Items);
       return result.Items as TagRecord[];
     } catch (error) {
       console.error("Error getting tag suggestions:", error);
