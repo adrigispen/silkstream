@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import styled from "styled-components";
 import { useUpdateVideoMetadataMutation } from "../services/api";
 import { toast } from "react-hot-toast";
@@ -122,15 +122,6 @@ const VideoMetadataForm: React.FC<VideoMetadataFormProps> = ({
     category: initialMetadata?.category || "",
   });
   const [tagInput, setTagInput] = React.useState("");
-
-  useEffect(() => {
-    setFormData({
-      title: initialMetadata?.title || "",
-      description: initialMetadata?.description || "",
-      tags: initialMetadata?.tags || [],
-      category: initialMetadata?.category || "",
-    });
-  }, [initialMetadata]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

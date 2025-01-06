@@ -96,6 +96,7 @@ const VideoList: React.FC = () => {
             />
           </VideoPlayerWrapper>
           <VideoMetadataForm
+            key={selectedVideo.id}
             videoId={selectedVideo.id}
             initialMetadata={selectedVideo.metadata}
           />
