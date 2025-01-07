@@ -1,0 +1,7 @@
+{
+  "httpMethod": "GET",
+  "path": "/videos",
+  "headers": {
+    "Content-Type": "application/json"
+  }
+}

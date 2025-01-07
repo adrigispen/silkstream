@@ -5,11 +5,22 @@ import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 import { SSMClient, GetParameterCommand } from "@aws-sdk/client-ssm";
 import { fromIni } from "@aws-sdk/credential-providers";
 
-// Initialize SSM Client
-const ssmClient = new SSMClient({
+const getLocalCredentials = () => {
+  if (process.env.AWS_LAMBDA_FUNCTION_NAME) {
+    return {};
+  }
+  return {
+    credentials: fromIni({ profile: "personal" }),
+  };
+};
+
+const config = {
   region: "eu-central-1",
-  credentials: fromIni({ profile: "personal" }),
-});
+  ...getLocalCredentials(),
+};
+
+// Initialize SSM Client
+const ssmClient = new SSMClient(config);
 
 // Function to get parameter from SSM
 async function getParameter(name: string): Promise<string> {

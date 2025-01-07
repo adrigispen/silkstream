@@ -7,7 +7,7 @@ interface UploadUrlResponse {
 }
 
 export const api = createApi({
-  baseQuery: fetchBaseQuery({ baseUrl: "http://localhost:3000/api/" }),
+  baseQuery: fetchBaseQuery({ baseUrl: import.meta.env.VITE_API_URL }),
   tagTypes: ["Videos"],
   endpoints: (builder) => ({
     getVideos: builder.query<{ videos: Video[] }, void>({
