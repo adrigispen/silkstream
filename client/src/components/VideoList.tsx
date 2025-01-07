@@ -41,8 +41,11 @@ const FlexContainer = styled.div`
 const VideoCard = styled.div`
   border: 1px solid #e5e7eb;
   border-radius: 0.5rem;
-  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
   cursor: pointer;
+  max-width: 25vw;
   transition: background-color 0.2s;
 
   &:hover {
@@ -52,9 +55,7 @@ const VideoCard = styled.div`
 
 const VideoTitle = styled.h3`
   font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  margin: 5px 0px;
 `;
 
 const VideoInfo = styled.div`
@@ -63,11 +64,22 @@ const VideoInfo = styled.div`
   margin-top: 0.25rem;
 `;
 
+const Category = styled.p`
+  font-weight: 400;
+  margin: 2px 0px;
+  text-transform: uppercase;
+`;
+
+const Description = styled.p`
+  margin: 2px 0px;
+  font-style: italic;
+`;
+
 const Tags = styled.div`
   display: flex;
   flex-wrap: wrap;
   gap: 0.25rem;
-  margin-top: 0.5rem;
+  margin-top: 0.8rem;
 `;
 
 const Tag = styled.span`
@@ -101,7 +113,10 @@ const VideoList: React.FC = () => {
           <VideoPlayerWrapper>
             <VideoPlayer
               url={selectedVideo.url}
-              title={formatFileName(selectedVideo.key)}
+              title={
+                selectedVideo.metadata?.title ||
+                formatFileName(selectedVideo.key)
+              }
             />
           </VideoPlayerWrapper>
           <VideoMetadataForm
@@ -121,7 +136,10 @@ const VideoList: React.FC = () => {
             </VideoTitle>
             <VideoInfo>
               {video.metadata?.category && (
-                <p>Category: {video.metadata.category}</p>
+                <Category>{video.metadata.category}</Category>
+              )}
+              {video.metadata?.description && (
+                <Description>{video.metadata.description}</Description>
               )}
             </VideoInfo>
             {video.metadata?.tags && video.metadata.tags.length > 0 && (

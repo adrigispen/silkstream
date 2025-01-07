@@ -120,12 +120,13 @@ const SuggestionsList = styled.ul`
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 `;
 
-const SuggestionItem = styled.li`
+const SuggestionItem = styled.li<{ isActive: boolean }>`
   padding: 0.5rem;
   cursor: pointer;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background-color: ${(props) => (props.isActive ? "#e5e7eb" : "transparent")};
 
   &:hover {
     background-color: #f3f4f6;
@@ -174,6 +175,7 @@ const VideoMetadataForm: React.FC<VideoMetadataFormProps> = ({
   const [tagInput, setTagInput] = React.useState("");
   const [suggestions, setSuggestions] = React.useState<TagSuggestion[]>([]);
   const [getTagSuggestions, { isFetching }] = useLazyGetTagSuggestionsQuery();
+  const [selectedTagIndex, setSelectedTagIndex] = React.useState(-1);
 
   const debouncedFetchSuggestions = useCallback(
     debounce(async (prefix: string) => {
@@ -219,19 +221,6 @@ const VideoMetadataForm: React.FC<VideoMetadataFormProps> = ({
     }
   };
 
-  const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && tagInput.trim()) {
-      e.preventDefault();
-      if (!formData.tags.includes(tagInput.trim())) {
-        setFormData((prev) => ({
-          ...prev,
-          tags: [...prev.tags, tagInput.trim()],
-        }));
-      }
-      setTagInput("");
-    }
-  };
-
   const handleRemoveTag = (tagToRemove: string) => {
     setFormData((prev) => ({
       ...prev,
@@ -239,11 +228,65 @@ const VideoMetadataForm: React.FC<VideoMetadataFormProps> = ({
     }));
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (suggestions.length === 0) {
+      if (e.key === "Enter" && tagInput.trim()) {
+        e.preventDefault();
+        if (!formData.tags.includes(tagInput.trim())) {
+          setFormData((prev) => ({
+            ...prev,
+            tags: [...prev.tags, tagInput.trim()],
+          }));
+        }
+        setTagInput("");
+      }
+      return;
+    }
+
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        setSelectedTagIndex((prev) =>
+          prev < suggestions.length - 1 ? prev + 1 : prev
+        );
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        setSelectedTagIndex((prev) => (prev > -1 ? prev - 1 : prev));
+        break;
+      case "Enter":
+        e.preventDefault();
+        if (selectedTagIndex > -1) {
+          handleSuggestionClick(suggestions[selectedTagIndex].tag);
+          setSelectedTagIndex(-1);
+        } else if (tagInput.trim()) {
+          // Original tag adding logic
+          if (!formData.tags.includes(tagInput.trim())) {
+            setFormData((prev) => ({
+              ...prev,
+              tags: [...prev.tags, tagInput.trim()],
+            }));
+          }
+          setTagInput("");
+          setSuggestions([]);
+        }
+        break;
+      case "Escape":
+        setSuggestions([]);
+        setSelectedTagIndex(-1);
+        break;
+    }
+  };
+
   React.useEffect(() => {
     const handleClickOutside = () => setSuggestions([]);
     document.addEventListener("click", handleClickOutside);
     return () => document.removeEventListener("click", handleClickOutside);
   }, []);
+
+  React.useEffect(() => {
+    setSelectedTagIndex(-1);
+  }, [suggestions]);
 
   return (
     <Form onSubmit={handleSubmit}>
@@ -290,7 +333,7 @@ const VideoMetadataForm: React.FC<VideoMetadataFormProps> = ({
             id="tags"
             value={tagInput}
             onChange={handleTagInputChange}
-            onKeyDown={handleAddTag}
+            onKeyDown={handleKeyDown}
             placeholder="Type a tag and press Enter"
           />
           {isFetching && tagInput.length >= 3 && (
@@ -298,9 +341,10 @@ const VideoMetadataForm: React.FC<VideoMetadataFormProps> = ({
           )}
           {!isFetching && suggestions.length > 0 && (
             <SuggestionsList>
-              {suggestions.map(({ tag, count }) => (
+              {suggestions.map(({ tag, count }, i) => (
                 <SuggestionItem
                   key={tag}
+                  isActive={i === selectedTagIndex}
                   onClick={(e) => {
                     e.stopPropagation();
                     handleSuggestionClick(tag);
