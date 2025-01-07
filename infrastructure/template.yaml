@@ -18,7 +18,7 @@ Resources:
       Cors:
         AllowMethods: "'GET,POST,PUT,DELETE,PATCH,OPTIONS'"
         AllowHeaders: "'Content-Type'"
-        AllowOrigin: "'*'" # Update with domain later
+        AllowOrigin: "'https://d36s6tbbzamzr1.cloudfront.net'"
 
   VideosBucket:
     Type: AWS::S3::Bucket
@@ -27,7 +27,7 @@ Resources:
         CorsRules:
           - AllowedHeaders: ["*"]
             AllowedMethods: [GET, PUT, POST]
-            AllowedOrigins: ["*"] # Update with domain later
+            AllowedOrigins: ["https://d36s6tbbzamzr1.cloudfront.net"]
             MaxAge: 3600
 
   SSMPolicy:

@@ -10,7 +10,10 @@ export const createApp = async () => {
 
   app.use(
     cors({
-      origin: "http://localhost:5173",
+      origin:
+        process.env.NODE_ENV === "development"
+          ? "http://localhost:5173"
+          : "https://d36s6tbbzamzr1.cloudfront.net",
       methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
       allowedHeaders: ["Content-Type"],
     })
