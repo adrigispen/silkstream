@@ -81,5 +81,10 @@ Resources:
             TableName: silkstream-vids
         - DynamoDBCrudPolicy:
             TableName: silkstream-tags
-        - SSMParameterReadPolicy:
-            ParameterName: /silkstream/*
+        - Statement:
+            - Effect: Allow
+              Action:
+                - ssm:GetParameter
+                - ssm:GetParameters
+                - ssm:GetParametersByPath
+              Resource: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/silkstream/*"

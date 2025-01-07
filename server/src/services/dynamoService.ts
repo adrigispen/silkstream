@@ -95,7 +95,7 @@ export class DynamoService {
       const result = await this.services.docClient.send(
         new ScanCommand({
           TableName: "silkstream-tags",
-          FilterExpression: "begins_with(tag, :prefix)",
+          FilterExpression: "contains(tag, :prefix)",
           ExpressionAttributeValues: {
             ":prefix": prefix.toLowerCase(),
           },
