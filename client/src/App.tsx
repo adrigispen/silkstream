@@ -11,7 +11,7 @@ const AppContainer = styled.div`
 `;
 
 const Header = styled.header`
-  background-color: white;
+  background-color: #ffffff;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
 `;
 
@@ -26,16 +26,23 @@ const HeaderContent = styled.div`
 const HeaderTitle = styled.h1`
   font-size: 1.8rem;
   font-weight: bold;
-  color: #111827;
+  color: #00012e;
+  flex-grow: 1;
+  padding: 0px 12px;
 `;
 
 const Main = styled.main`
   max-width: 80rem;
   margin: 0 auto;
-  padding: 1rem;
+  padding: 1.25%;
+
   display: flex;
   flex-direction: column;
   gap: 1rem;
+`;
+
+const Image = styled.img`
+  height: 80px;
 `;
 
 function App() {
@@ -45,6 +52,7 @@ function App() {
         <Toaster position="top-right" />
         <Header>
           <HeaderContent>
+            <Image src="/hang.svg" />
             <HeaderTitle>SilkStream</HeaderTitle>
             <VideoUpload />
           </HeaderContent>

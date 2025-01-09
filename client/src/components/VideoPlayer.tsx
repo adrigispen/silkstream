@@ -3,7 +3,6 @@ import styled from "styled-components";
 
 interface VideoPlayerProps {
   url: string;
-  title?: string;
 }
 
 const Container = styled.div`
@@ -19,7 +18,6 @@ const Container = styled.div`
 const VideoWrapper = styled.div`
   width: 100%;
   position: relative;
-  margin-bottom: 1rem;
   border-radius: 0.5rem;
   overflow: hidden;
 `;
@@ -37,13 +35,7 @@ const StyledVideo = styled.video`
   }
 `;
 
-const Title = styled.h2`
-  font-size: 1.125rem;
-  font-weight: 600;
-  margin-top: 0.5rem;
-`;
-
-const VideoPlayer: React.FC<VideoPlayerProps> = ({ url, title }) => {
+const VideoPlayer: React.FC<VideoPlayerProps> = ({ url }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -60,7 +52,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ url, title }) => {
           Your browser does not support the video tag.
         </StyledVideo>
       </VideoWrapper>
-      {title && <Title>{title}</Title>}
     </Container>
   );
 };

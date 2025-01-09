@@ -50,6 +50,8 @@ const VideoUpload: React.FC = () => {
         headers: {
           "Content-Type": file.type,
         },
+        mode: "cors",
+        credentials: "omit",
       });
 
       // Show toast for the actual upload

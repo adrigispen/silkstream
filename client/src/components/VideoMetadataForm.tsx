@@ -8,6 +8,33 @@ import {
 import { toast } from "react-hot-toast";
 import { TagSuggestion } from "../types/video";
 
+const VideoDetails = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+`;
+
+const Title = styled.h2`
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
+`;
+
+const Category = styled.span`
+  font-weight: 400;
+  text-transform: uppercase;
+  font-size: 0.875rem;
+  color: #6b7280;
+`;
+
+const Description = styled.span`
+  font-style: italic;
+  margin: 5px 0px;
+  font-size: 0.875rem;
+  color: #6b7280;
+`;
+
 const Form = styled.form`
   display: flex;
   flex-direction: column;
@@ -66,8 +93,10 @@ const TagList = styled.div`
 `;
 
 const Tag = styled.span`
-  background-color: #e5e7eb;
+  background-color: navy;
+  color: white;
   padding: 0.25rem 0.5rem;
+  font-size: 0.9rem;
   border-radius: 0.25rem;
   display: flex;
   align-items: center;
@@ -77,12 +106,27 @@ const Tag = styled.span`
 const RemoveTag = styled.button`
   background: none;
   border: none;
-  color: #6b7280;
+  color: white;
   cursor: pointer;
   padding: 0.125rem;
 
   &:hover {
     color: #ef4444;
+  }
+`;
+
+const EditButton = styled.button`
+  padding: 0.5rem 1rem;
+  background-color: darkgoldenrod;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  cursor: pointer;
+  margin-top: 0.5rem;
+
+  &:hover {
+    background-color: goldenrod;
   }
 `;
 
@@ -166,6 +210,7 @@ const VideoMetadataForm: React.FC<VideoMetadataFormProps> = ({
   initialMetadata,
 }) => {
   const [updateMetadata, { isLoading }] = useUpdateVideoMetadataMutation();
+  const [isEditMode, setIsEditMode] = React.useState<boolean>(false);
   const [formData, setFormData] = React.useState({
     title: initialMetadata?.title || "",
     description: initialMetadata?.description || "",
@@ -216,6 +261,7 @@ const VideoMetadataForm: React.FC<VideoMetadataFormProps> = ({
         metadata: formData,
       }).unwrap();
       toast.success("Metadata updated successfully");
+      setIsEditMode(false);
     } catch (error) {
       toast.error(`Failed to update metadata: ${error}`);
     }
@@ -288,7 +334,7 @@ const VideoMetadataForm: React.FC<VideoMetadataFormProps> = ({
     setSelectedTagIndex(-1);
   }, [suggestions]);
 
-  return (
+  return isEditMode || !initialMetadata ? (
     <Form onSubmit={handleSubmit}>
       <FormGroup>
         <Label htmlFor="title">Title</Label>
@@ -336,9 +382,7 @@ const VideoMetadataForm: React.FC<VideoMetadataFormProps> = ({
             onKeyDown={handleKeyDown}
             placeholder="Type a tag and press Enter"
           />
-          {isFetching && tagInput.length >= 3 && (
-            <LoadingIndicator>Loading...</LoadingIndicator>
-          )}
+          {isFetching && <LoadingIndicator>Loading...</LoadingIndicator>}
           {!isFetching && suggestions.length > 0 && (
             <SuggestionsList>
               {suggestions.map(({ tag, count }, i) => (
@@ -373,6 +417,18 @@ const VideoMetadataForm: React.FC<VideoMetadataFormProps> = ({
         {isLoading ? "Saving..." : "Save"}
       </Button>
     </Form>
+  ) : (
+    <VideoDetails>
+      <Title>{initialMetadata?.title}</Title>
+      <Category>{initialMetadata?.category}</Category>
+      <Description>{initialMetadata?.description}</Description>
+      <TagList>
+        {initialMetadata?.tags?.map((tag) => (
+          <Tag>{tag}</Tag>
+        ))}
+      </TagList>
+      <EditButton onClick={() => setIsEditMode(true)}>Edit details</EditButton>
+    </VideoDetails>
   );
 };
 

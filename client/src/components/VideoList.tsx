@@ -28,66 +28,127 @@ const VideoPlayerWrapper = styled.div`
   margin-bottom: 2rem;
 `;
 
-const Image = styled.img`
-  max-height: 50vh;
-`;
-
 const FlexContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 1rem;
+  width: 100%;
+  @media (min-width: 768px) {
+    gap: 0.2rem;
+  }
 `;
 
 const VideoCard = styled.div`
   border: 1px solid #e5e7eb;
+  background-color: white;
   border-radius: 0.5rem;
   display: flex;
   flex-direction: column;
-  padding: 1rem;
+  padding: 0.5rem 1rem;
   cursor: pointer;
-  max-width: 25vw;
+  width: 35vw;
   transition: background-color 0.2s;
+  gap: 0.2rem;
+
+  @media (min-width: 768px) {
+    flex-direction: row;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+  }
 
   &:hover {
     background-color: #f9fafb;
   }
 `;
 
-const VideoTitle = styled.h3`
+const HeaderRow = styled.div`
+  display: none;
+
+  @media (min-width: 768px) {
+    display: flex;
+    padding: 0rem 1rem;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+
+    font-weight: bold;
+    font-size: 11px;
+    text-transform: uppercase;
+    color: black;
+    font-style: normal;
+  }
+`;
+
+const HeaderTitle = styled.h4`
+  width: 25%;
+`;
+
+const VideoTitle = styled.h4`
   font-weight: 500;
   margin: 5px 0px;
+
+  @media (min-width: 768px) {
+    width: 25%;
+  }
 `;
 
-const VideoInfo = styled.div`
+const HeaderCategory = styled.span`
+  width: 15%;
+`;
+
+const Category = styled.span`
+  font-weight: 400;
+  text-transform: uppercase;
   font-size: 0.875rem;
   color: #6b7280;
-  margin-top: 0.25rem;
+
+  @media (min-width: 768px) {
+    width: 15%;
+  }
 `;
 
-const Category = styled.p`
-  font-weight: 400;
-  margin: 2px 0px;
-  text-transform: uppercase;
+const HeaderDescription = styled.span`
+  width: 30%;
 `;
 
-const Description = styled.p`
-  margin: 2px 0px;
+const Description = styled.span`
   font-style: italic;
+  margin: 5px 0px;
+  font-size: 0.875rem;
+  color: #6b7280;
+
+  @media (min-width: 768px) {
+    width: 30%;
+    margin: 0px;
+  }
+`;
+
+const HeaderTags = styled.div`
+  width: 30%;
+  display: flex;
+  justify-content: right;
 `;
 
 const Tags = styled.div`
   display: flex;
   flex-wrap: wrap;
   gap: 0.25rem;
-  margin-top: 0.8rem;
+  margin: 5px 0px;
+
+  @media (min-width: 768px) {
+    width: 30%;
+    justify-content: right;
+  }
 `;
 
 const Tag = styled.span`
-  background-color: #e5e7eb;
-  padding: 0.125rem 0.375rem;
+  background-color: navy;
+  padding: 0.15rem 0.375rem;
   border-radius: 0.25rem;
   font-size: 0.75rem;
-  color: #4b5563;
+  color: white;
 `;
 const EmptyMessage = styled.div`
   text-align: center;
@@ -108,16 +169,10 @@ const VideoList: React.FC = () => {
 
   return (
     <Container>
-      {selectedVideo ? (
+      {selectedVideo && (
         <FlexContainer>
           <VideoPlayerWrapper>
-            <VideoPlayer
-              url={selectedVideo.url}
-              title={
-                selectedVideo.metadata?.title ||
-                formatFileName(selectedVideo.key)
-              }
-            />
+            <VideoPlayer url={selectedVideo.url} />
           </VideoPlayerWrapper>
           <VideoMetadataForm
             key={selectedVideo.id}
@@ -125,23 +180,21 @@ const VideoList: React.FC = () => {
             initialMetadata={selectedVideo.metadata}
           />
         </FlexContainer>
-      ) : (
-        <Image src="/hang.svg" />
       )}
       <FlexContainer>
+        <HeaderRow>
+          <HeaderTitle>Title</HeaderTitle>
+          <HeaderCategory>Category</HeaderCategory>
+          <HeaderDescription>Description</HeaderDescription>
+          <HeaderTags>Tags</HeaderTags>
+        </HeaderRow>
         {data?.videos.map((video) => (
           <VideoCard key={video.id} onClick={() => setSelectedVideo(video)}>
             <VideoTitle>
               {video.metadata?.title || formatFileName(video.key)}
             </VideoTitle>
-            <VideoInfo>
-              {video.metadata?.category && (
-                <Category>{video.metadata.category}</Category>
-              )}
-              {video.metadata?.description && (
-                <Description>{video.metadata.description}</Description>
-              )}
-            </VideoInfo>
+            <Category>{video.metadata?.category || ""}</Category>
+            <Description>{video.metadata?.description || ""}</Description>
             {video.metadata?.tags && video.metadata.tags.length > 0 && (
               <Tags>
                 {video.metadata.tags.map((tag) => (
