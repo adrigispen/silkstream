@@ -5,10 +5,10 @@
   "main": "index.js",
   "scripts": {
     "start": "node dist/index.js",
-    "dev": "ts-node-dev --respawn src/index.ts",
+    "dev": "NODE_ENV=development ts-node-dev --respawn src/index.ts",
     "build": "tsc",
     "build:lambda": "tsc -p tsconfig.lambda.json",
-    "build:prod": "rm -rf dist && tsc -p tsconfig.lambda.json && cp package*.json dist/ && cd dist && npm install --production",
+    "build:prod": "NODE_ENV=production rm -rf dist && tsc -p tsconfig.lambda.json && cp package*.json dist/ && cd dist && npm install --production",
     "sam:build": "npm run build:lambda && cd ../infrastructure && sam build",
     "sam:local": "cd ../infrastructure && sam local start-api",
     "test": "jest"
