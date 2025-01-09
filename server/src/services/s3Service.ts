@@ -17,7 +17,9 @@ export class S3Service {
       ContentType: contentType,
     });
 
-    return getSignedUrl(this.services.s3Client, command, { expiresIn: 3600 });
+    return getSignedUrl(this.services.s3Client, command, {
+      expiresIn: 3600,
+    });
   }
 
   async listS3Objects() {

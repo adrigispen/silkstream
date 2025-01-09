@@ -4,11 +4,11 @@ Description: SilkStream API
 
 Globals:
   Function:
-    Timeout: 30
+    Timeout: 120
     Runtime: nodejs18.x
     Environment:
       Variables:
-        AWS_BUCKET_NAME: !Ref VideosBucket
+        AWS_BUCKET_NAME: silkstream-vids
 
 Resources:
   SilkStreamApi:
@@ -19,16 +19,6 @@ Resources:
         AllowMethods: "'GET,POST,PUT,DELETE,PATCH,OPTIONS'"
         AllowHeaders: "'Content-Type'"
         AllowOrigin: "'https://d36s6tbbzamzr1.cloudfront.net'"
-
-  VideosBucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      CorsConfiguration:
-        CorsRules:
-          - AllowedHeaders: ["*"]
-            AllowedMethods: [GET, PUT, POST]
-            AllowedOrigins: ["https://d36s6tbbzamzr1.cloudfront.net"]
-            MaxAge: 3600
 
   SSMPolicy:
     Type: AWS::IAM::ManagedPolicy
@@ -76,7 +66,7 @@ Resources:
             Method: GET
       Policies:
         - S3CrudPolicy:
-            BucketName: !Ref VideosBucket
+            BucketName: silkstream-vids
         - DynamoDBCrudPolicy:
             TableName: silkstream-vids
         - DynamoDBCrudPolicy:
