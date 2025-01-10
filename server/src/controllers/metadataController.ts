@@ -63,6 +63,26 @@ export class MetadataController {
     }
   };
 
+  getCategories = async (req: Request, res: Response): Promise<any> => {
+    try {
+      const categories = await this.dynamoService.getCategories();
+      res.json({ categories });
+    } catch (error) {
+      console.error("Error getting categories:", error);
+      res.status(500).json({ error: "Failed to get categories" });
+    }
+  };
+
+  getTags = async (req: Request, res: Response): Promise<any> => {
+    try {
+      const tags = await this.dynamoService.getTags();
+      res.json({ tags });
+    } catch (error) {
+      console.error("Error getting tags:", error);
+      res.status(500).json({ error: "Failed to get tags" });
+    }
+  };
+
   getTagSuggestions = async (req: Request, res: Response): Promise<any> => {
     try {
       const { prefix = "" } = req.query;

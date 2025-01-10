@@ -19,6 +19,8 @@ export function createVideoRouter(awsServices: AwsServices) {
     return metadataController.updateMetadata(req, res);
   });
   router.get("/tags/suggest", metadataController.getTagSuggestions);
+  router.get("/tags", metadataController.getTags);
+  router.get("/categories", metadataController.getCategories);
 
   return router;
 }

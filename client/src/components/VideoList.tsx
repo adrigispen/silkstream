@@ -1,10 +1,15 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import VideoPlayer from "./VideoPlayer";
 import VideoMetadataForm from "./VideoMetadataForm";
-import { useGetVideosQuery } from "../services/api";
+import {
+  useGetVideosQuery,
+  useGetTagsQuery,
+  useGetCategoriesQuery,
+} from "../services/api";
 import { Video } from "../types/video";
 import VideoDetails from "./VideoDetails";
+import VideoFilters from "./VideoFilters";
 
 const Container = styled.div`
   margin: 0 auto;
@@ -158,13 +163,39 @@ const EmptyMessage = styled.div`
 `;
 
 const VideoList: React.FC = () => {
+  const [page, setPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
-  const { data, error, isLoading } = useGetVideosQuery();
+
+  const { data, error, isLoading, isFetching } = useGetVideosQuery({
+    page,
+    limit: 300,
+    search: searchTerm,
+    category: selectedCategory,
+    tags: selectedTags,
+  });
+
+  const { data: tagsData } = useGetTagsQuery();
+
+  const { data: categoriesData } = useGetCategoriesQuery();
+
+  const handleLoadMore = () => {
+    if (data?.nextPage && !isFetching) {
+      setPage((prev) => prev + 1);
+    }
+  };
+
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
 
   const formatFileName = (key: string) => {
     return key.split("/").pop() || key;
   };
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, selectedCategory, selectedTags]);
 
   if (isLoading) return <LoadingMessage>Loading videos...</LoadingMessage>;
   if (error) return <ErrorMessage>Error loading videos</ErrorMessage>;
@@ -182,6 +213,7 @@ const VideoList: React.FC = () => {
             <VideoMetadataForm
               key={selectedVideo.id}
               videoId={selectedVideo.id}
+              categories={categoriesData?.categories ?? []}
               metadata={
                 data?.videos.find((video) => video.id === selectedVideo.id)
                   ?.metadata
@@ -200,16 +232,26 @@ const VideoList: React.FC = () => {
         </FlexContainer>
       )}
       <FlexContainer>
+        <VideoFilters
+          search={searchTerm}
+          onSearchChange={setSearchTerm}
+          category={selectedCategory}
+          onCategoryChange={setSelectedCategory}
+          selectedTags={selectedTags}
+          onTagsChange={setSelectedTags}
+          categories={categoriesData?.categories ?? []}
+          availableTags={tagsData?.tags ?? []}
+        />
         <HeaderRow>
           <HeaderTitle>Title</HeaderTitle>
           <HeaderCategory>Category</HeaderCategory>
           <HeaderDescription>Description</HeaderDescription>
           <HeaderTags>Tags</HeaderTags>
         </HeaderRow>
-        {data?.videos.map((video) => (
+        {data?.videos?.map((video) => (
           <VideoCard key={video.id} onClick={() => setSelectedVideo(video)}>
             <VideoTitle>
-              {video.metadata?.title || formatFileName(video.key)}
+              {video.metadata?.title || formatFileName(video.id)}
             </VideoTitle>
             <Category>{video.metadata?.category || ""}</Category>
             <Description>{video.metadata?.description || ""}</Description>
@@ -222,9 +264,14 @@ const VideoList: React.FC = () => {
             )}
           </VideoCard>
         ))}
+        {data?.nextPage && (
+          <button onClick={handleLoadMore} disabled={isFetching}>
+            {isFetching ? "Loading" : "Load More"}
+          </button>
+        )}
       </FlexContainer>
 
-      {data?.videos.length === 0 && (
+      {data?.videos?.length === 0 && (
         <EmptyMessage>No videos uploaded yet</EmptyMessage>
       )}
     </Container>

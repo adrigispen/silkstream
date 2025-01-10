@@ -80,8 +80,8 @@ const VideoDetails: React.FC<VideoDetailsProps> = ({
       <Category>{metadata?.category}</Category>
       <Description>{metadata?.description}</Description>
       <TagList>
-        {metadata?.tags?.map((tag) => (
-          <Tag>{tag}</Tag>
+        {metadata?.tags?.map((tag, i) => (
+          <Tag key={i}>{tag}</Tag>
         ))}
       </TagList>
       <EditButton onClick={editDetails}>Edit details</EditButton>

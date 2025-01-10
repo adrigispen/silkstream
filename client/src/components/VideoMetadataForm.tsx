@@ -1,12 +1,12 @@
-import React, { useCallback } from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
-import debounce from "lodash/debounce";
 import {
   useLazyGetTagSuggestionsQuery,
   useUpdateVideoMetadataMutation,
 } from "../services/api";
 import { toast } from "react-hot-toast";
 import { TagSuggestion } from "../types/video";
+import Select from "./Select";
 
 const Form = styled.form`
   display: flex;
@@ -155,6 +155,7 @@ const LoadingIndicator = styled.div`
 
 interface VideoMetadataFormProps {
   videoId: string;
+  categories: string[];
   metadata?: {
     title?: string;
     description?: string;
@@ -166,42 +167,40 @@ interface VideoMetadataFormProps {
 
 const VideoMetadataForm: React.FC<VideoMetadataFormProps> = ({
   videoId,
+  categories,
   metadata,
   closeForm,
 }) => {
   const [updateMetadata, { isLoading }] = useUpdateVideoMetadataMutation();
-  const [formData, setFormData] = React.useState({
+  const [formData, setFormData] = useState({
     title: metadata?.title || "",
     description: metadata?.description || "",
     tags: metadata?.tags || [],
     category: metadata?.category || "",
   });
-  const [tagInput, setTagInput] = React.useState("");
-  const [suggestions, setSuggestions] = React.useState<TagSuggestion[]>([]);
+  const [tagInput, setTagInput] = useState("");
+  const [suggestions, setSuggestions] = useState<TagSuggestion[]>([]);
   const [getTagSuggestions, { isFetching }] = useLazyGetTagSuggestionsQuery();
-  const [selectedTagIndex, setSelectedTagIndex] = React.useState(-1);
+  const [selectedTagIndex, setSelectedTagIndex] = useState(-1);
 
-  const debouncedFetchSuggestions = useCallback(
-    debounce(async (prefix: string) => {
-      if (prefix.length >= 1) {
-        try {
-          const result = await getTagSuggestions(prefix).unwrap();
-          setSuggestions(result.suggestions);
-        } catch (error) {
-          console.error("Failed to fetch suggestions:", error);
-          setSuggestions([]);
-        }
-      } else {
+  const fetchSuggestions = async (prefix: string) => {
+    if (prefix.length >= 1) {
+      try {
+        const result = await getTagSuggestions(prefix).unwrap();
+        setSuggestions(result.suggestions);
+      } catch (error) {
+        console.error("Failed to fetch suggestions:", error);
         setSuggestions([]);
       }
-    }, 300),
-    [getTagSuggestions]
-  );
+    } else {
+      setSuggestions([]);
+    }
+  };
 
   const handleTagInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setTagInput(value);
-    debouncedFetchSuggestions(value);
+    fetchSuggestions(value);
   };
 
   const handleSuggestionClick = (tag: string) => {
@@ -321,13 +320,16 @@ const VideoMetadataForm: React.FC<VideoMetadataFormProps> = ({
 
       <FormGroup>
         <Label htmlFor="category">Category</Label>
-        <Input
-          id="category"
+        <Select
           value={formData.category}
-          onChange={(e) =>
-            setFormData((prev) => ({ ...prev, category: e.target.value }))
+          onChange={(value) =>
+            setFormData((prev) => ({ ...prev, category: value }))
           }
-          placeholder="Enter video category"
+          options={categories.map((cat) => ({
+            value: cat.toLowerCase(),
+            label: cat,
+          }))}
+          placeholder="--"
         />
       </FormGroup>
 

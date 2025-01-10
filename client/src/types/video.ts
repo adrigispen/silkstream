@@ -29,3 +29,19 @@ export interface TagSuggestion {
   count: number;
   lastUsed: string;
 }
+
+export interface VideoQueryParams {
+  search?: string;
+  sortBy?: "title" | "category" | "uploadDate" | "size";
+  sortDirection?: "asc" | "desc";
+  tags?: string[];
+  category?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface PaginatedResponse<Video> {
+  videos: Video[];
+  nextPage?: string;
+  totalCount: number;
+}

@@ -5,18 +5,56 @@ import {
   QueryCommand,
 } from "@aws-sdk/lib-dynamodb";
 import type { AwsServices } from "../config/aws";
-import { VideoMetadata } from "../types/video";
+import { VideoMetadata, VideoQueryParams } from "../types/video";
 import { TagRecord } from "../types/tag";
 import { ScanCommand } from "@aws-sdk/lib-dynamodb";
+
+interface SearchableVideoMetadata {
+  id: string;
+  title: string;
+  description?: string;
+  category?: string;
+  tags?: string[];
+  searchableText?: string; // Combined field for searching
+}
 
 export class DynamoService {
   constructor(private readonly services: AwsServices) {}
 
+  private async calculateStartKey(
+    page: number,
+    limit: number
+  ): Promise<Record<string, any> | undefined> {
+    if (page <= 1) return undefined;
+
+    const lastKeyCommand = new QueryCommand({
+      TableName: "silkstream-vids",
+      Limit: (page - 1) * limit,
+      ScanIndexForward: false, // This maintains consistent ordering
+    });
+
+    const result = await this.services.docClient.send(lastKeyCommand);
+    return result.LastEvaluatedKey;
+  }
+
   async saveMetadata(metadata: VideoMetadata) {
+    const searchableText = [
+      metadata.title,
+      metadata.description,
+      metadata.category,
+      ...(metadata.tags || []),
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
     return this.services.docClient.send(
       new PutCommand({
         TableName: "silkstream-vids",
-        Item: metadata,
+        Item: {
+          ...metadata,
+          searchableText,
+        },
       })
     );
   }
@@ -64,6 +102,28 @@ export class DynamoService {
     };
   }
 
+  async getCategories(): Promise<string[]> {
+    try {
+      const result = await this.services.docClient.send(
+        new ScanCommand({
+          TableName: "silkstream-vids",
+          ProjectionExpression: "category",
+        })
+      );
+
+      const uniqueCategories = new Set<string>(
+        (result.Items as { category: string }[]).map((record) =>
+          record.category.toLowerCase()
+        )
+      );
+
+      return [...uniqueCategories];
+    } catch (error) {
+      console.error("Error getting categories:", error);
+      throw error;
+    }
+  }
+
   // Tag-related methods
   async updateTagCount(tag: string, increment: boolean) {
     try {
@@ -90,6 +150,21 @@ export class DynamoService {
     }
   }
 
+  async getTags(): Promise<string[]> {
+    try {
+      const result = await this.services.docClient.send(
+        new ScanCommand({
+          TableName: "silkstream-tags",
+        })
+      );
+
+      return (result.Items as TagRecord[]).map((record) => record.tag);
+    } catch (error) {
+      console.error("Error getting tags:", error);
+      throw error;
+    }
+  }
+
   async getSuggestions(prefix: string): Promise<TagRecord[]> {
     try {
       const result = await this.services.docClient.send(
@@ -103,7 +178,6 @@ export class DynamoService {
         })
       );
 
-      console.log(result.Items);
       return result.Items as TagRecord[];
     } catch (error) {
       console.error("Error getting tag suggestions:", error);
@@ -121,5 +195,58 @@ export class DynamoService {
     // Increase count for new tags
     const addedTags = newTags.filter((tag) => !oldTags.includes(tag));
     await Promise.all(addedTags.map((tag) => this.updateTagCount(tag, true)));
+  }
+
+  async queryVideos(params: VideoQueryParams) {
+    const {
+      search,
+      sortBy = "uploadDate",
+      sortDirection = "desc",
+      tags,
+      category,
+      page = 1,
+      limit = 50,
+    } = params;
+
+    let filterExpressions: string[] = [];
+    const expressionValues: Record<string, any> = {};
+
+    if (search) {
+      filterExpressions.push("contains(searchableText, :search)");
+      expressionValues[":search"] = search.toLowerCase();
+    }
+    if (category) {
+      filterExpressions.push("category = :category");
+      expressionValues[":category"] = category;
+    }
+
+    if (tags && tags.length > 0) {
+      const tagFilters = tags.map((_, index) => `contains(tags, :tag${index})`);
+      filterExpressions.push(`${tagFilters.join(" AND ")}`);
+      tags.forEach((tag, index) => {
+        expressionValues[`:tag${index}`] = tag;
+      });
+    }
+
+    const command = new ScanCommand({
+      TableName: "silkstream-vids",
+      FilterExpression:
+        filterExpressions.length > 0
+          ? filterExpressions.join(" AND ")
+          : undefined,
+      ExpressionAttributeValues:
+        Object.keys(expressionValues).length > 0 ? expressionValues : undefined,
+      Limit: limit,
+      ExclusiveStartKey:
+        page > 1 ? this.calculateStartKey(page, limit) : undefined,
+    });
+
+    const result = await this.services.docClient.send(command);
+
+    return {
+      videos: result.Items || [],
+      lastEvaluatedKey: result.LastEvaluatedKey,
+      count: result.Count || 0,
+    };
   }
 }

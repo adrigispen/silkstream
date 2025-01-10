@@ -17,3 +17,13 @@ export interface Video {
   size: number;
   metadata: VideoMetadata | null;
 }
+
+export interface VideoQueryParams {
+  search?: string;
+  sortBy?: "title" | "category" | "uploadDate" | "size";
+  sortDirection?: "asc" | "desc";
+  tags?: string[];
+  category?: string;
+  page?: number;
+  limit?: number;
+}

@@ -27,33 +27,73 @@ export class VideoController {
     }
   };
 
-  listVideos = async (_req: Request, res: Response): Promise<any> => {
+  listVideos = async (req: Request, res: Response): Promise<any> => {
     try {
-      const response = await this.s3Service.listS3Objects();
+      const { search, sortBy, sortDirection, tags, category, page, limit } =
+        req.query;
 
-      if (!response.Contents) {
-        return res.json({ videos: [] });
+      const hasFilters = search || sortBy || tags || category;
+
+      if (!hasFilters) {
+        // If no filters, get directly from S3
+        const response = await this.s3Service.listS3Objects();
+
+        if (!response.Contents) {
+          return res.json({ videos: [] });
+        }
+
+        const videos = await Promise.all(
+          response.Contents.map(async (object) => {
+            const url = await this.s3Service.getSignedDownloadUrl(object.Key!);
+            const metadataResult = await this.dynamoService.getMetadata(
+              object.Key!
+            );
+
+            return {
+              id: object.Key,
+              key: object.Key,
+              url,
+              lastModified: object.LastModified,
+              size: object.Size,
+              metadata: metadataResult.Item || null,
+            };
+          })
+        );
+
+        return res.json({
+          videos,
+          count: videos.length,
+        });
+      } else {
+        const dbResult = await this.dynamoService.queryVideos({
+          search: search as string,
+          sortBy: sortBy as any,
+          sortDirection: sortDirection as "asc" | "desc",
+          tags: tags ? (tags as string).split(",") : undefined,
+          category: category as string,
+          page: page ? parseInt(page as string) : undefined,
+          limit: limit ? parseInt(limit as string) : undefined,
+        });
+
+        const videosWithUrls = await Promise.all(
+          dbResult.videos.map(async (metadata) => {
+            const url = await this.s3Service.getSignedDownloadUrl(metadata.id);
+
+            return {
+              id: metadata.id,
+              key: metadata.id,
+              url,
+              metadata,
+            };
+          })
+        );
+
+        return res.json({
+          videos: videosWithUrls,
+          lastEvaluatedKey: dbResult.lastEvaluatedKey,
+          count: dbResult.count,
+        });
       }
-
-      const videos = await Promise.all(
-        response.Contents.map(async (object) => {
-          const url = await this.s3Service.getSignedDownloadUrl(object.Key!);
-          const metadataResult = await this.dynamoService.getMetadata(
-            object.Key!
-          );
-
-          return {
-            id: object.Key,
-            key: object.Key,
-            url,
-            lastModified: object.LastModified,
-            size: object.Size,
-            metadata: metadataResult.Item || null,
-          };
-        })
-      );
-
-      res.json({ videos });
     } catch (error) {
       console.error("Error listing videos:", error);
       res.status(500).json({ error: "Failed to list videos" });
