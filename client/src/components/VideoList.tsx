@@ -4,6 +4,7 @@ import VideoPlayer from "./VideoPlayer";
 import VideoMetadataForm from "./VideoMetadataForm";
 import { useGetVideosQuery } from "../services/api";
 import { Video } from "../types/video";
+import VideoDetails from "./VideoDetails";
 
 const Container = styled.div`
   margin: 0 auto;
@@ -159,6 +160,7 @@ const EmptyMessage = styled.div`
 const VideoList: React.FC = () => {
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
   const { data, error, isLoading } = useGetVideosQuery();
+  const [isEditMode, setIsEditMode] = useState<boolean>(false);
 
   const formatFileName = (key: string) => {
     return key.split("/").pop() || key;
@@ -174,11 +176,27 @@ const VideoList: React.FC = () => {
           <VideoPlayerWrapper>
             <VideoPlayer url={selectedVideo.url} />
           </VideoPlayerWrapper>
-          <VideoMetadataForm
-            key={selectedVideo.id}
-            videoId={selectedVideo.id}
-            initialMetadata={selectedVideo.metadata}
-          />
+          {isEditMode ||
+          !data?.videos.find((video) => video.id === selectedVideo.id)
+            ?.metadata ? (
+            <VideoMetadataForm
+              key={selectedVideo.id}
+              videoId={selectedVideo.id}
+              metadata={
+                data?.videos.find((video) => video.id === selectedVideo.id)
+                  ?.metadata
+              }
+              closeForm={() => setIsEditMode(false)}
+            />
+          ) : (
+            <VideoDetails
+              editDetails={() => setIsEditMode(true)}
+              metadata={
+                data?.videos.find((video) => video.id === selectedVideo.id)
+                  ?.metadata
+              }
+            />
+          )}
         </FlexContainer>
       )}
       <FlexContainer>
