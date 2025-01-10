@@ -64,6 +64,18 @@ Resources:
             RestApiId: !Ref SilkStreamApi
             Path: /tags/suggest
             Method: GET
+        GetTags:
+          Type: Api
+          Properties:
+            RestApiId: !Ref SilkStreamApi
+            Path: /tags
+            Method: GET
+        GetCategories:
+          Type: Api
+          Properties:
+            RestApiId: !Ref SilkStreamApi
+            Path: /categories
+            Method: GET
       Policies:
         - S3CrudPolicy:
             BucketName: silkstream-vids
