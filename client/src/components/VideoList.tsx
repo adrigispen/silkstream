@@ -131,8 +131,23 @@ const Description = styled.span`
   }
 `;
 
+const HeaderUploadDate = styled.span`
+  width: 10%;
+`;
+
+const UploadDate = styled.span`
+  color: #6b7280;
+  margin: 5px 0px;
+  color: #6b7280;
+
+  @media (min-width: 768px) {
+    width: 10%;
+    margin: 0px;
+  }
+`;
+
 const HeaderTags = styled.div`
-  width: 30%;
+  width: 20%;
   display: flex;
   justify-content: right;
 `;
@@ -144,7 +159,7 @@ const Tags = styled.div`
   margin: 5px 0px;
 
   @media (min-width: 768px) {
-    width: 30%;
+    width: 20%;
     justify-content: right;
   }
 `;
@@ -191,6 +206,14 @@ const VideoList: React.FC = () => {
 
   const formatFileName = (key: string) => {
     return key.split("/").pop() || key;
+  };
+
+  const formatDate = (date: string) => {
+    const arr = date.split("-");
+    const day = arr.pop()?.slice(0, 2);
+    const month = arr.pop();
+    const year = arr.pop();
+    return `${day}.${month}.${year}`;
   };
 
   useEffect(() => {
@@ -246,6 +269,7 @@ const VideoList: React.FC = () => {
           <HeaderTitle>Title</HeaderTitle>
           <HeaderCategory>Category</HeaderCategory>
           <HeaderDescription>Description</HeaderDescription>
+          <HeaderUploadDate>Date uploaded</HeaderUploadDate>
           <HeaderTags>Tags</HeaderTags>
         </HeaderRow>
         {data?.videos?.map((video) => (
@@ -255,6 +279,7 @@ const VideoList: React.FC = () => {
             </VideoTitle>
             <Category>{video.metadata?.category || ""}</Category>
             <Description>{video.metadata?.description || ""}</Description>
+            <UploadDate>{formatDate(video.lastModified)}</UploadDate>
             {video.metadata?.tags && video.metadata.tags.length > 0 && (
               <Tags>
                 {video.metadata.tags.map((tag) => (

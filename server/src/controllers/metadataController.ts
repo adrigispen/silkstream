@@ -65,7 +65,8 @@ export class MetadataController {
 
   getCategories = async (req: Request, res: Response): Promise<any> => {
     try {
-      const categories = await this.dynamoService.getCategories();
+      const unsorted = await this.dynamoService.getCategories();
+      const categories = [...unsorted].sort((a, b) => a.localeCompare(b));
       res.json({ categories });
     } catch (error) {
       console.error("Error getting categories:", error);
@@ -75,7 +76,8 @@ export class MetadataController {
 
   getTags = async (req: Request, res: Response): Promise<any> => {
     try {
-      const tags = await this.dynamoService.getTags();
+      const unsorted = await this.dynamoService.getTags();
+      const tags = [...unsorted].sort((a, b) => a.localeCompare(b));
       res.json({ tags });
     } catch (error) {
       console.error("Error getting tags:", error);

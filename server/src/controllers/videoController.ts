@@ -60,8 +60,17 @@ export class VideoController {
           })
         );
 
+        const sorted = [...videos].sort((a, b) => {
+          if (!a.metadata) return -1;
+          if (!b.metadata) return 1;
+          return (
+            new Date(b.lastModified || "").getTime() -
+            new Date(a.lastModified || "").getTime()
+          );
+        });
+
         return res.json({
-          videos,
+          videos: sorted,
           count: videos.length,
         });
       } else {
