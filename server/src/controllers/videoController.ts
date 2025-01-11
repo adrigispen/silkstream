@@ -29,10 +29,18 @@ export class VideoController {
 
   listVideos = async (req: Request, res: Response): Promise<any> => {
     try {
-      const { search, sortBy, sortDirection, tags, category, page, limit } =
-        req.query;
+      const {
+        search,
+        sortBy,
+        sortDirection = "desc",
+        tags,
+        category,
+        page,
+        limit,
+      } = req.query;
 
-      const hasFilters = search || sortBy || tags || category;
+      const hasFilters = search || tags || category;
+      
 
       if (!hasFilters) {
         // If no filters, get directly from S3
@@ -60,14 +68,40 @@ export class VideoController {
           })
         );
 
-        const sorted = [...videos].sort((a, b) => {
-          if (!a.metadata) return -1;
-          if (!b.metadata) return 1;
-          return (
-            new Date(b.lastModified || "").getTime() -
-            new Date(a.lastModified || "").getTime()
-          );
-        });
+        let sorted;
+
+        if (sortBy && sortBy !== "uploadDate") {
+          sorted = [...videos].sort((a, b) => {
+            let aVal: string, bVal: string;
+
+            switch (sortBy) {
+              case "title":
+                aVal = a.metadata?.title || "";
+                bVal = b.metadata?.title || "";
+                break;
+              case "category":
+                aVal = a.metadata?.category || "";
+                bVal = b.metadata?.category || "";
+                break;
+              default:
+                return 0;
+            }
+
+            return sortDirection === "desc"
+              ? aVal.toLowerCase().localeCompare(bVal.toLowerCase())
+              : bVal.toLowerCase().localeCompare(aVal.toLowerCase());
+          });
+        } else {
+          sorted = [...videos].sort((a, b) => {
+            if (!a.metadata) return -1;
+            if (!b.metadata) return 1;
+            return sortDirection === "desc"
+              ? new Date(b.lastModified || "").getTime() -
+                  new Date(a.lastModified || "").getTime()
+              : new Date(a.lastModified || "").getTime() -
+                  new Date(b.lastModified || "").getTime();
+          });
+        }
 
         return res.json({
           videos: sorted,

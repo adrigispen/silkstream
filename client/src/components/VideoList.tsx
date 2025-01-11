@@ -89,6 +89,7 @@ const HeaderRow = styled.div`
 
 const HeaderTitle = styled.h4`
   width: 25%;
+  cursor: pointer;
 `;
 
 const VideoTitle = styled.h4`
@@ -102,6 +103,7 @@ const VideoTitle = styled.h4`
 
 const HeaderCategory = styled.span`
   width: 15%;
+  cursor: pointer;
 `;
 
 const Category = styled.span`
@@ -133,6 +135,7 @@ const Description = styled.span`
 
 const HeaderUploadDate = styled.span`
   width: 10%;
+  cursor: pointer;
 `;
 
 const UploadDate = styled.span`
@@ -183,6 +186,8 @@ const VideoList: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
+  const [sortBy, setSortBy] = useState("");
+  const [sortDirection, setSortDirection] = useState("desc");
 
   const { data, error, isLoading, isFetching } = useGetVideosQuery({
     page,
@@ -190,6 +195,8 @@ const VideoList: React.FC = () => {
     search: searchTerm,
     category: selectedCategory,
     tags: selectedTags,
+    sortBy: sortBy,
+    sortDirection,
   });
 
   const { data: tagsData } = useGetTagsQuery();
@@ -266,10 +273,31 @@ const VideoList: React.FC = () => {
           availableTags={tagsData?.tags ?? []}
         />
         <HeaderRow>
-          <HeaderTitle>Title</HeaderTitle>
-          <HeaderCategory>Category</HeaderCategory>
+          <HeaderTitle
+            onClick={() => {
+              setSortBy("title");
+              setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+            }}
+          >
+            Title
+          </HeaderTitle>
+          <HeaderCategory
+            onClick={() => {
+              setSortBy("category");
+              setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+            }}
+          >
+            Category
+          </HeaderCategory>
           <HeaderDescription>Description</HeaderDescription>
-          <HeaderUploadDate>Date uploaded</HeaderUploadDate>
+          <HeaderUploadDate
+            onClick={() => {
+              setSortBy("uploadDate");
+              setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+            }}
+          >
+            Date uploaded
+          </HeaderUploadDate>
           <HeaderTags>Tags</HeaderTags>
         </HeaderRow>
         {data?.videos?.map((video) => (
@@ -279,7 +307,9 @@ const VideoList: React.FC = () => {
             </VideoTitle>
             <Category>{video.metadata?.category || ""}</Category>
             <Description>{video.metadata?.description || ""}</Description>
-            <UploadDate>{formatDate(video.lastModified)}</UploadDate>
+            <UploadDate>
+              {video.lastModified ? formatDate(video.lastModified) : ""}
+            </UploadDate>
             {video.metadata?.tags && video.metadata.tags.length > 0 && (
               <Tags>
                 {video.metadata.tags.map((tag) => (

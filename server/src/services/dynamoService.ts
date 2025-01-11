@@ -205,7 +205,7 @@ export class DynamoService {
       tags,
       category,
       page = 1,
-      limit = 50,
+      limit = 300,
     } = params;
 
     let filterExpressions: string[] = [];
@@ -243,8 +243,32 @@ export class DynamoService {
 
     const result = await this.services.docClient.send(command);
 
+    let sorted = result.Items || [];
+    if (sortBy && sortBy !== "uploadDate") {
+      sorted = (result.Items || []).sort((a, b) => {
+        let aVal: string, bVal: string;
+
+        switch (sortBy) {
+          case "title":
+            aVal = a.title || "";
+            bVal = b.title || "";
+            break;
+          case "category":
+            aVal = a.category || "";
+            bVal = b.category || "";
+            break;
+          default:
+            return 0;
+        }
+
+        return sortDirection === "desc"
+          ? aVal.toLowerCase().localeCompare(bVal.toLowerCase())
+          : bVal.toLowerCase().localeCompare(aVal.toLowerCase());
+      });
+    }
+
     return {
-      videos: result.Items || [],
+      videos: sorted,
       lastEvaluatedKey: result.LastEvaluatedKey,
       count: result.Count || 0,
     };

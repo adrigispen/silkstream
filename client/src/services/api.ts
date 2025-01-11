@@ -23,6 +23,8 @@ export const api = createApi({
         search?: string;
         category?: string;
         tags?: string[];
+        sortBy?: string;
+        sortDirection?: string;
       }
     >({
       query: (params = {}) => ({
