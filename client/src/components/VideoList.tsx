@@ -45,9 +45,9 @@ const FlexContainer = styled.div`
   }
 `;
 
-const VideoCard = styled.div`
+const VideoCard = styled.div<{ selected: boolean }>`
   border: 1px solid #e5e7eb;
-  background-color: white;
+  background-color: ${({ selected }) => (selected ? "#ffeec2" : "white")};
   border-radius: 0.5rem;
   display: flex;
   flex-direction: column;
@@ -65,7 +65,7 @@ const VideoCard = styled.div`
   }
 
   &:hover {
-    background-color: #f9fafb;
+    background-color: rgb(255, 247, 228);
   }
 `;
 
@@ -191,7 +191,7 @@ const VideoList: React.FC = () => {
 
   const { data, error, isLoading, isFetching } = useGetVideosQuery({
     page,
-    limit: 300,
+    limit: 1000,
     search: searchTerm,
     category: selectedCategory,
     tags: selectedTags,
@@ -301,7 +301,11 @@ const VideoList: React.FC = () => {
           <HeaderTags>Tags</HeaderTags>
         </HeaderRow>
         {data?.videos?.map((video) => (
-          <VideoCard key={video.id} onClick={() => setSelectedVideo(video)}>
+          <VideoCard
+            key={video.id}
+            onClick={() => setSelectedVideo(video)}
+            selected={video === selectedVideo}
+          >
             <VideoTitle>
               {video.metadata?.title || formatFileName(video.id)}
             </VideoTitle>

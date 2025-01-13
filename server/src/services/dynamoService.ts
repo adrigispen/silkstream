@@ -48,7 +48,14 @@ export class DynamoService {
       .join(" ")
       .toLowerCase();
 
-    return this.services.docClient.send(
+    console.log("Metadata before save:", metadata);
+    console.log("SearchableText:", searchableText);
+    console.log("Full item being saved:", {
+      ...metadata,
+      searchableText,
+    });
+
+    const result = await this.services.docClient.send(
       new PutCommand({
         TableName: "silkstream-vids",
         Item: {
@@ -57,6 +64,9 @@ export class DynamoService {
         },
       })
     );
+
+    console.log("save result: ", result);
+    return result;
   }
 
   async getMetadata(id: string) {
@@ -69,7 +79,30 @@ export class DynamoService {
   }
 
   async updateMetadata(id: string, updates: Partial<VideoMetadata>) {
-    const expressionData = this.generateUpdateExpression(updates);
+    const existingMetadata = await this.getMetadata(id);
+
+    const updatedMetadata = {
+      ...existingMetadata.Item,
+      ...updates,
+    };
+
+    const searchableText = [
+      updatedMetadata.title,
+      updatedMetadata.description,
+      updatedMetadata.category,
+      ...(updatedMetadata.tags || []),
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    // Add searchableText to the updates
+    const updatesWithSearch = {
+      ...updates,
+      searchableText,
+    };
+
+    const expressionData = this.generateUpdateExpression(updatesWithSearch);
 
     return this.services.docClient.send(
       new UpdateCommand({
@@ -100,6 +133,20 @@ export class DynamoService {
       ExpressionAttributeNames: exprAttrNames,
       ExpressionAttributeValues: exprAttrValues,
     };
+  }
+
+  async getAllVideos() {
+    try {
+      const result = await this.services.docClient.send(
+        new ScanCommand({
+          TableName: "silkstream-vids",
+        })
+      );
+      return result.Items || [];
+    } catch (error) {
+      console.error("Error retrieving all videos:", error);
+      throw error;
+    }
   }
 
   async getCategories(): Promise<string[]> {
@@ -174,7 +221,7 @@ export class DynamoService {
           ExpressionAttributeValues: {
             ":prefix": prefix.toLowerCase(),
           },
-          Limit: 10,
+          Limit: 1000,
         })
       );
 
@@ -205,7 +252,7 @@ export class DynamoService {
       tags,
       category,
       page = 1,
-      limit = 300,
+      limit = 1000,
     } = params;
 
     let filterExpressions: string[] = [];
