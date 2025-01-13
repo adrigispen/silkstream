@@ -69,6 +69,16 @@ const VideoCard = styled.div<{ selected: boolean }>`
   }
 `;
 
+const Checkbox = styled.input.attrs({ type: "checkbox" })`
+  align-self: flex-start;
+
+  @media (min-width: 768px) {
+    align-self: center;
+    width: 20px;
+    margin-left: -5px;
+  }
+`;
+
 const HeaderRow = styled.div`
   display: none;
 
@@ -82,7 +92,7 @@ const HeaderRow = styled.div`
     font-weight: bold;
     font-size: 11px;
     text-transform: uppercase;
-    color: black;
+    color: navy;
     font-style: normal;
   }
 `;
@@ -90,6 +100,7 @@ const HeaderRow = styled.div`
 const HeaderTitle = styled.h4`
   width: 25%;
   cursor: pointer;
+  margin-left: 20px;
 `;
 
 const VideoTitle = styled.h4`
@@ -188,6 +199,7 @@ const VideoList: React.FC = () => {
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
   const [sortBy, setSortBy] = useState("");
   const [sortDirection, setSortDirection] = useState("desc");
+  const [selectedVideoIds, setSelectedVideoIds] = useState<string[]>([]);
 
   const { data, error, isLoading, isFetching } = useGetVideosQuery({
     page,
@@ -306,6 +318,15 @@ const VideoList: React.FC = () => {
             onClick={() => setSelectedVideo(video)}
             selected={video === selectedVideo}
           >
+            <Checkbox
+              onClick={(e) => {
+                const newSelectedIds = selectedVideoIds.includes(video.id)
+                  ? selectedVideoIds.filter((id) => id !== video.id)
+                  : selectedVideoIds.concat(video.id);
+                setSelectedVideoIds(newSelectedIds);
+                e.stopPropagation();
+              }}
+            />
             <VideoTitle>
               {video.metadata?.title || formatFileName(video.id)}
             </VideoTitle>

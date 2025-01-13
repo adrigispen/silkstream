@@ -12,7 +12,7 @@ const SearchInput = styled.input`
   padding: 0.5rem;
   border: 1px solid #e5e7eb;
   border-radius: 0.375rem;
-  min-width: 200px;
+  min-width: 300px;
 `;
 
 const Select = styled.select`
@@ -20,7 +20,11 @@ const Select = styled.select`
   border: 1px solid #e5e7eb;
   border-radius: 0.375rem;
   background-color: white;
+  height: 50px;
 `;
+
+const Actions = styled.button`
+`
 
 interface VideoFiltersProps {
   search: string;
@@ -81,6 +85,7 @@ const VideoFilters: React.FC<VideoFiltersProps> = ({
           </option>
         ))}
       </Select>
+      <Actions>Actions</Actions>
     </FiltersContainer>
   );
 };
