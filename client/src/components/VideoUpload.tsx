@@ -7,7 +7,7 @@ import { useDispatch } from "react-redux";
 const UploadButton = styled.button`
   padding: 0.5rem 1rem;
   background-color: darkgoldenrod;
-  max-height: 45px;
+  min-height: 38px;
   color: white;
   border: none;
   border-radius: 0.375rem;

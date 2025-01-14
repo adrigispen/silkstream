@@ -6,7 +6,7 @@ import {
 } from "../services/api";
 import { toast } from "react-hot-toast";
 import { TagSuggestion } from "../types/video";
-import Select from "./Select";
+import Select from "react-select";
 
 const Form = styled.form`
   display: flex;
@@ -144,6 +144,12 @@ const TagInputContainer = styled.div`
   position: relative;
 `;
 
+const CategorySelect = styled(Select<Option>)`
+  min-width: 180px;
+  font-family: sans-serif;
+  font-size: 13px;
+`;
+
 const LoadingIndicator = styled.div`
   position: absolute;
   right: 0.75rem;
@@ -163,6 +169,11 @@ interface VideoMetadataFormProps {
     category?: string;
   };
   closeForm: () => void;
+}
+
+interface Option {
+  value: string;
+  label: string;
 }
 
 const VideoMetadataForm: React.FC<VideoMetadataFormProps> = ({
@@ -320,16 +331,18 @@ const VideoMetadataForm: React.FC<VideoMetadataFormProps> = ({
 
       <FormGroup>
         <Label htmlFor="category">Category</Label>
-        <Select
-          value={formData.category}
+        <CategorySelect
+          placeholder="Select category..."
           onChange={(value) =>
-            setFormData((prev) => ({ ...prev, category: value }))
+            setFormData((prev) => ({
+              ...prev,
+              category: value ? value.value : "",
+            }))
           }
           options={categories.map((cat) => ({
             value: cat.toLowerCase(),
             label: cat,
           }))}
-          placeholder="--"
         />
       </FormGroup>
 

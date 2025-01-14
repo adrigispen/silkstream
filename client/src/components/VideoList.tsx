@@ -10,6 +10,7 @@ import {
 import { Video } from "../types/video";
 import VideoDetails from "./VideoDetails";
 import VideoFilters from "./VideoFilters";
+import ActionsDropdown from "./ActionsDropdown";
 
 const Container = styled.div`
   margin: 0 auto;
@@ -45,6 +46,15 @@ const FlexContainer = styled.div`
   }
 `;
 
+const ActionsRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  width: 100%;
+  align-items: center;
+`;
+
 const VideoCard = styled.div<{ selected: boolean }>`
   border: 1px solid #e5e7eb;
   background-color: ${({ selected }) => (selected ? "#ffeec2" : "white")};
@@ -74,7 +84,7 @@ const Checkbox = styled.input.attrs({ type: "checkbox" })`
 
   @media (min-width: 768px) {
     align-self: center;
-    width: 20px;
+    width: 30px;
     margin-left: -5px;
   }
 `;
@@ -100,7 +110,7 @@ const HeaderRow = styled.div`
 const HeaderTitle = styled.h4`
   width: 25%;
   cursor: pointer;
-  margin-left: 20px;
+  margin-left: 30px;
 `;
 
 const VideoTitle = styled.h4`
@@ -274,16 +284,19 @@ const VideoList: React.FC = () => {
         </FlexContainer>
       )}
       <FlexContainer>
-        <VideoFilters
-          search={searchTerm}
-          onSearchChange={setSearchTerm}
-          category={selectedCategory}
-          onCategoryChange={setSelectedCategory}
-          selectedTags={selectedTags}
-          onTagsChange={setSelectedTags}
-          categories={categoriesData?.categories ?? []}
-          availableTags={tagsData?.tags ?? []}
-        />
+        <ActionsRow>
+          <VideoFilters
+            search={searchTerm}
+            onSearchChange={setSearchTerm}
+            category={selectedCategory}
+            onCategoryChange={setSelectedCategory}
+            selectedTags={selectedTags}
+            onTagsChange={setSelectedTags}
+            categories={categoriesData?.categories ?? []}
+            availableTags={tagsData?.tags ?? []}
+          />
+          <ActionsDropdown selectedVideoIds={selectedVideoIds} />
+        </ActionsRow>
         <HeaderRow>
           <HeaderTitle
             onClick={() => {

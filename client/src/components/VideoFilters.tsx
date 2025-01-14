@@ -1,30 +1,39 @@
 import React from "react";
 import styled from "styled-components";
+import Select, { SingleValue, MultiValue } from "react-select";
 
 const FiltersContainer = styled.div`
-  margin-bottom: 2rem;
+  margin: 1rem 0 1rem 1rem;
   display: flex;
-  gap: 1rem;
+  gap: 0.5rem;
   flex-wrap: wrap;
+  justify-content: flex-end;
 `;
 
 const SearchInput = styled.input`
   padding: 0.5rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.375rem;
-  min-width: 300px;
+  border: 1px solid rgb(204, 204, 204);
+  border-radius: 4px;
+  min-width: 180px;
 `;
 
-const Select = styled.select`
-  padding: 0.5rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.375rem;
-  background-color: white;
-  height: 50px;
+const CategorySelect = styled(Select<Option>)`
+  min-width: 180px;
+  font-family: sans-serif;
+  font-size: 13px;
+  text-transform: capitalize;
 `;
 
-const Actions = styled.button`
-`
+const TagsSelect = styled(Select<Option, true>)`
+  min-width: 180px;
+  font-family: sans-serif;
+  font-size: 13px;
+`;
+
+interface Option {
+  value: string;
+  label: string;
+}
 
 interface VideoFiltersProps {
   search: string;
@@ -56,36 +65,39 @@ const VideoFilters: React.FC<VideoFiltersProps> = ({
         onChange={(e) => onSearchChange(e.target.value)}
       />
 
-      <Select
-        value={category}
-        onChange={(e) => onCategoryChange(e.target.value)}
-      >
-        <option value="">All Categories</option>
-        {categories.map((cat) => (
-          <option key={cat} value={cat}>
-            {cat}
-          </option>
-        ))}
-      </Select>
+      <CategorySelect
+        placeholder="Select category..."
+        value={category ? { value: category, label: category } : null}
+        options={[
+          { value: "", label: "All Categories" },
+          ...categories.map((cat) => ({
+            value: cat,
+            label: cat,
+          })),
+        ]}
+        onChange={(selectedOption: SingleValue<Option>) =>
+          onCategoryChange(selectedOption ? selectedOption.value : "")
+        }
+      />
 
-      <Select
-        multiple
-        value={selectedTags}
-        onChange={(e) => {
-          const selected = Array.from(
-            e.target.selectedOptions,
-            (option) => option.value
-          );
+      <TagsSelect
+        isMulti
+        isClearable // Add this line
+        placeholder="Select tags..."
+        value={selectedTags.map((tag) => ({
+          value: tag,
+          label: tag,
+        }))}
+        name="tags"
+        options={availableTags.map((tag) => ({
+          value: tag,
+          label: tag,
+        }))}
+        onChange={(selectedOptions: MultiValue<Option>) => {
+          const selected = selectedOptions.map((option) => option.value);
           onTagsChange(selected);
         }}
-      >
-        {availableTags.map((tag) => (
-          <option key={tag} value={tag}>
-            {tag}
-          </option>
-        ))}
-      </Select>
-      <Actions>Actions</Actions>
+      />
     </FiltersContainer>
   );
 };
