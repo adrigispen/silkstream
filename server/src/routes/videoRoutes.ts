@@ -22,5 +22,9 @@ export function createVideoRouter(awsServices: AwsServices) {
   router.get("/tags", metadataController.getTags);
   router.get("/categories", metadataController.getCategories);
 
+  router.post("/videos/batch-upsert", metadataController.batchUpsertMetadata);
+  router.delete("/videos/:videoId", videoController.deleteVideo);
+  router.post("/videos/batch-delete", videoController.batchDeleteVideos);
+
   return router;
 }

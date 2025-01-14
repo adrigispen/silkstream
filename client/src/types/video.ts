@@ -1,10 +1,10 @@
 export interface VideoMetadata {
   id: string;
-  title: string;
+  title?: string;
   description?: string;
   tags?: string[];
   category?: string;
-  originalFileName: string;
+  originalFileName?: string;
   s3Key: string;
   uploadDate: string;
 }

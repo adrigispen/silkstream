@@ -91,6 +91,42 @@ export const api = createApi({
     getTagSuggestions: builder.query<{ suggestions: TagSuggestion[] }, string>({
       query: (prefix) => `tags/suggest?prefix=${encodeURIComponent(prefix)}`,
     }),
+    deleteVideo: builder.mutation<void, string>({
+      query: (videoId) => ({
+        url: `videos/${videoId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Videos"],
+    }),
+    batchDeleteVideos: builder.mutation<void, { videoIds: string[] }>({
+      query: (payload) => ({
+        url: "videos/batch-delete",
+        method: "POST",
+        body: payload,
+      }),
+      invalidatesTags: ["Videos"],
+    }),
+    batchUpsertMetadata: builder.mutation<
+      void,
+      {
+        videoId: string;
+        metadata: {
+          tags?: string[];
+          category?: string;
+          uploadDate: string;
+          originalFileName: string;
+          s3Key: string;
+        };
+        isNew: boolean;
+      }[]
+    >({
+      query: (updates) => ({
+        url: "videos/batch-upsert",
+        method: "POST",
+        body: updates,
+      }),
+      invalidatesTags: ["Videos"],
+    }),
   }),
 });
 
@@ -103,4 +139,7 @@ export const {
   useLazyGetTagSuggestionsQuery,
   useGetTagsQuery,
   useGetCategoriesQuery,
+  useDeleteVideoMutation,
+  useBatchDeleteVideosMutation,
+  useBatchUpsertMetadataMutation,
 } = api;

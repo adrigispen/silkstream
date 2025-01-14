@@ -209,7 +209,7 @@ const VideoList: React.FC = () => {
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
   const [sortBy, setSortBy] = useState("");
   const [sortDirection, setSortDirection] = useState("desc");
-  const [selectedVideoIds, setSelectedVideoIds] = useState<string[]>([]);
+  const [selectedVideos, setSelectedVideos] = useState<Video[]>([]);
 
   const { data, error, isLoading, isFetching } = useGetVideosQuery({
     page,
@@ -270,6 +270,7 @@ const VideoList: React.FC = () => {
                 data?.videos.find((video) => video.id === selectedVideo.id)
                   ?.metadata
               }
+              uploadDate={selectedVideo.lastModified}
               closeForm={() => setIsEditMode(false)}
             />
           ) : (
@@ -295,7 +296,12 @@ const VideoList: React.FC = () => {
             categories={categoriesData?.categories ?? []}
             availableTags={tagsData?.tags ?? []}
           />
-          <ActionsDropdown selectedVideoIds={selectedVideoIds} />
+          <ActionsDropdown
+            selectedVideos={selectedVideos}
+            categories={categoriesData?.categories ?? []}
+            availableTags={tagsData?.tags ?? []}
+            deselectVideos={() => setSelectedVideos([])}
+          />
         </ActionsRow>
         <HeaderRow>
           <HeaderTitle
@@ -333,12 +339,13 @@ const VideoList: React.FC = () => {
           >
             <Checkbox
               onClick={(e) => {
-                const newSelectedIds = selectedVideoIds.includes(video.id)
-                  ? selectedVideoIds.filter((id) => id !== video.id)
-                  : selectedVideoIds.concat(video.id);
-                setSelectedVideoIds(newSelectedIds);
+                const newSelecteds = selectedVideos.includes(video)
+                  ? selectedVideos.filter((vid) => vid !== video)
+                  : selectedVideos.concat(video);
+                setSelectedVideos(newSelecteds);
                 e.stopPropagation();
               }}
+              checked={selectedVideos.includes(video) ? true : false}
             />
             <VideoTitle>
               {video.metadata?.title || formatFileName(video.id)}

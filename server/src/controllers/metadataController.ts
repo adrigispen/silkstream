@@ -2,6 +2,7 @@
 import { Request, Response } from "express";
 import { DynamoService } from "../services/dynamoService";
 import type { AwsServices } from "../config/aws";
+import { VideoMetadataUpsert } from "../types/video";
 
 export class MetadataController {
   private dynamoService: DynamoService;
@@ -97,6 +98,43 @@ export class MetadataController {
     } catch (error) {
       console.error("Error getting tag suggestions:", error);
       res.status(500).json({ error: "Failed to get tag suggestions" });
+    }
+  };
+
+  batchUpsertMetadata = async (req: Request, res: Response): Promise<any> => {
+    try {
+      const updates = req.body;
+
+      await Promise.all(
+        updates.map(async (update: VideoMetadataUpsert) => {
+          if (update.isNew) {
+            await this.dynamoService.saveMetadata({
+              id: update.videoId,
+              ...update.metadata,
+            });
+            // Index in search
+            // await this.searchService.indexVideo(
+            //   update.videoId,
+            //   update.metadata
+            // );
+          } else {
+            await this.dynamoService.updateMetadata(
+              update.videoId,
+              update.metadata
+            );
+            // Update search index
+            // await this.searchService.indexVideo(
+            //   update.videoId,
+            //   update.metadata
+            // );
+          }
+        })
+      );
+
+      return res.json({ success: true });
+    } catch (error) {
+      console.error("Error in batch upsert:", error);
+      return res.status(500).json({ error: "Failed to update videos" });
     }
   };
 }

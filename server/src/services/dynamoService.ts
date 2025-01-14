@@ -3,20 +3,12 @@ import {
   GetCommand,
   UpdateCommand,
   QueryCommand,
+  DeleteCommand,
 } from "@aws-sdk/lib-dynamodb";
 import type { AwsServices } from "../config/aws";
 import { VideoMetadata, VideoQueryParams } from "../types/video";
 import { TagRecord } from "../types/tag";
 import { ScanCommand } from "@aws-sdk/lib-dynamodb";
-
-interface SearchableVideoMetadata {
-  id: string;
-  title: string;
-  description?: string;
-  category?: string;
-  tags?: string[];
-  searchableText?: string; // Combined field for searching
-}
 
 export class DynamoService {
   constructor(private readonly services: AwsServices) {}
@@ -48,13 +40,6 @@ export class DynamoService {
       .join(" ")
       .toLowerCase();
 
-    console.log("Metadata before save:", metadata);
-    console.log("SearchableText:", searchableText);
-    console.log("Full item being saved:", {
-      ...metadata,
-      searchableText,
-    });
-
     const result = await this.services.docClient.send(
       new PutCommand({
         TableName: "silkstream-vids",
@@ -65,7 +50,6 @@ export class DynamoService {
       })
     );
 
-    console.log("save result: ", result);
     return result;
   }
 
@@ -78,13 +62,22 @@ export class DynamoService {
     );
   }
 
-  async updateMetadata(id: string, updates: Partial<VideoMetadata>) {
-    const existingMetadata = await this.getMetadata(id);
+  async updateMetadata(videoId: string, updates: Partial<VideoMetadata>) {
+    const existingMetadata = await this.getMetadata(videoId);
+    const category =
+      !updates.category &&
+      existingMetadata.Item &&
+      existingMetadata.Item.category
+        ? existingMetadata.Item.category
+        : updates.category;
 
     const updatedMetadata = {
       ...existingMetadata.Item,
       ...updates,
+      category,
     };
+
+    const { id, ...finalUpdates } = updatedMetadata;
 
     const searchableText = [
       updatedMetadata.title,
@@ -98,7 +91,7 @@ export class DynamoService {
 
     // Add searchableText to the updates
     const updatesWithSearch = {
-      ...updates,
+      ...finalUpdates,
       searchableText,
     };
 
@@ -107,7 +100,7 @@ export class DynamoService {
     return this.services.docClient.send(
       new UpdateCommand({
         TableName: "silkstream-vids",
-        Key: { id },
+        Key: { id: videoId },
         ...expressionData,
       })
     );
@@ -319,5 +312,14 @@ export class DynamoService {
       lastEvaluatedKey: result.LastEvaluatedKey,
       count: result.Count || 0,
     };
+  }
+
+  async deleteVideo(videoId: string) {
+    return this.services.docClient.send(
+      new DeleteCommand({
+        TableName: "silkstream-vids",
+        Key: { id: videoId },
+      })
+    );
   }
 }

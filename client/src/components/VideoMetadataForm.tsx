@@ -148,6 +148,7 @@ const CategorySelect = styled(Select<Option>)`
   min-width: 180px;
   font-family: sans-serif;
   font-size: 13px;
+  text-transform: capitalize;
 `;
 
 const LoadingIndicator = styled.div`
@@ -169,6 +170,7 @@ interface VideoMetadataFormProps {
     category?: string;
   };
   closeForm: () => void;
+  uploadDate: string;
 }
 
 interface Option {
@@ -181,6 +183,7 @@ const VideoMetadataForm: React.FC<VideoMetadataFormProps> = ({
   categories,
   metadata,
   closeForm,
+  uploadDate,
 }) => {
   const [updateMetadata, { isLoading }] = useUpdateVideoMetadataMutation();
   const [formData, setFormData] = useState({
@@ -227,7 +230,12 @@ const VideoMetadataForm: React.FC<VideoMetadataFormProps> = ({
     try {
       await updateMetadata({
         videoId,
-        metadata: formData,
+        metadata: {
+          ...formData,
+          originalFileName: videoId,
+          s3Key: videoId,
+          uploadDate: uploadDate,
+        },
       }).unwrap();
       toast.success("Metadata updated successfully");
       closeForm();
@@ -275,7 +283,6 @@ const VideoMetadataForm: React.FC<VideoMetadataFormProps> = ({
           handleSuggestionClick(suggestions[selectedTagIndex].tag);
           setSelectedTagIndex(-1);
         } else if (tagInput.trim()) {
-          // Original tag adding logic
           if (!formData.tags.includes(tagInput.trim())) {
             setFormData((prev) => ({
               ...prev,
@@ -333,6 +340,14 @@ const VideoMetadataForm: React.FC<VideoMetadataFormProps> = ({
         <Label htmlFor="category">Category</Label>
         <CategorySelect
           placeholder="Select category..."
+          defaultValue={
+            metadata?.category
+              ? {
+                  value: metadata?.category,
+                  label: metadata?.category,
+                }
+              : null
+          }
           onChange={(value) =>
             setFormData((prev) => ({
               ...prev,

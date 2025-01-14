@@ -40,7 +40,6 @@ export class VideoController {
       } = req.query;
 
       const hasFilters = search || tags || category;
-      
 
       if (!hasFilters) {
         // If no filters, get directly from S3
@@ -140,6 +139,43 @@ export class VideoController {
     } catch (error) {
       console.error("Error listing videos:", error);
       res.status(500).json({ error: "Failed to list videos" });
+    }
+  };
+
+  deleteVideo = async (req: Request, res: Response): Promise<any> => {
+    try {
+      const { videoId } = req.params;
+
+      // Delete from S3
+      await this.s3Service.deleteObject(videoId);
+      // Delete from DynamoDB
+      await this.dynamoService.deleteVideo(videoId);
+      // Delete from search index
+      // await this.searchService.deleteVideo(videoId);
+
+      return res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting video:", error);
+      return res.status(500).json({ error: "Failed to delete video" });
+    }
+  };
+
+  batchDeleteVideos = async (req: Request, res: Response): Promise<any> => {
+    try {
+      const { videoIds } = req.body;
+
+      await Promise.all(
+        videoIds.map(async (videoId: string) => {
+          await this.s3Service.deleteObject(videoId);
+          await this.dynamoService.deleteVideo(videoId);
+          // await this.searchService.deleteVideo(videoId);
+        })
+      );
+
+      return res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting videos:", error);
+      return res.status(500).json({ error: "Failed to delete videos" });
     }
   };
 }

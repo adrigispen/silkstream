@@ -76,6 +76,24 @@ Resources:
             RestApiId: !Ref SilkStreamApi
             Path: /categories
             Method: GET
+        BatchUpsertMetadata:
+          Type: Api
+          Properties:
+            RestApiId: !Ref SilkStreamApi
+            Path: /videos/batch-upsert
+            Method: POST
+        BatchDeleteVideos:
+          Type: Api
+          Properties:
+            RestApiId: !Ref SilkStreamApi
+            Path: /videos/batch-delete
+            Method: POST
+        DeleteVideo:
+          Type: Api
+          Properties:
+            RestApiId: !Ref SilkStreamApi
+            Path: /videos/{videoId}
+            Method: DELETE
       Policies:
         - S3CrudPolicy:
             BucketName: silkstream-vids

@@ -1,10 +1,10 @@
 export interface VideoMetadata {
   id: string;
-  title: string;
+  title?: string;
   description?: string;
   tags?: string[];
   category?: string;
-  originalFileName: string;
+  originalFileName?: string;
   s3Key: string;
   uploadDate: string;
 }
@@ -26,4 +26,10 @@ export interface VideoQueryParams {
   category?: string;
   page?: number;
   limit?: number;
+}
+
+export interface VideoMetadataUpsert {
+  videoId: string;
+  metadata: Partial<VideoMetadata> & { s3Key: string; uploadDate: string };
+  isNew?: boolean;
 }

@@ -3,6 +3,7 @@ import {
   ListObjectsV2Command,
   GetObjectCommand,
   PutObjectCommand,
+  DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import type { AwsServices } from "../config/aws";
@@ -38,5 +39,14 @@ export class S3Service {
     });
 
     return getSignedUrl(this.services.s3Client, command, { expiresIn: 3600 });
+  }
+
+  async deleteObject(key: string) {
+    const command = new DeleteObjectCommand({
+      Bucket: this.services.bucketName,
+      Key: key,
+    });
+
+    return this.services.s3Client.send(command);
   }
 }
