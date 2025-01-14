@@ -1,15 +1,18 @@
 # SilkStream
 
-A personal video storage and streaming application built with React, TypeScript, and AWS. Currently, it allows uploading and streaming videos and entering basic metadata about each video.
+A personal video storage and streaming application built with React, TypeScript, and AWS. Currently, it allows uploading and streaming videos and entering basic metadata about each video. You can search by title, description, tags, or category, and filter down by category or tags. Bulk actions are in progress - deleting videos, or updating the category or tags of multiple videos at once.
 
 #### Next steps:
 
-1. Add validation for saving metadata
-2. UX improvements
-   - Add video thumbnails
-   - List view should use video title, not original file name
-   - Add metadata on upload, or at least title
-   - Allow filtering and searching for videos
+1. Improve security, give it at least an admin password to access
+2. Allow multi-tenency - user accounts, with a separate video archive for each user
+3. Add searchService with OpenSearch
+4. Smaller features:
+   - Add video thumbnails, ability to play videos in cards
+   - Allow managing tags and categories
+   - Pagination to improve performance
+   - Give users option to star vids they'd like to practice
+   - Allow sending links to individual videos
 
 ## Prerequisites
 
@@ -79,6 +82,6 @@ Frontend will run on http://localhost:5173
 
 ## Technologies Used
 
-- Frontend: React, TypeScript, Vite
-- Backend: Node.js, Express, TypeScript, Jest
-- Cloud: AWS (S3, Parameter Store, DynamoDB)
+- Frontend: React, TypeScript, Vite, RTK Query
+- Backend: Node.js, Express, TypeScript
+- Cloud: AWS (S3, Parameter Store, DynamoDB, CloudFront, APIGateway, OpenSearch (coming))
