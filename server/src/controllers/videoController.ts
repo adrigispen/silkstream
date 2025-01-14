@@ -3,15 +3,28 @@ import { Request, Response } from "express";
 import { S3Service } from "../services/s3Service";
 import { DynamoService } from "../services/dynamoService";
 import type { AwsServices } from "../config/aws";
+import { SearchService } from "../services/searchService";
 
 export class VideoController {
   private s3Service: S3Service;
   private dynamoService: DynamoService;
+  private searchService: SearchService;
 
   constructor(awsServices: AwsServices) {
     this.s3Service = new S3Service(awsServices);
     this.dynamoService = new DynamoService(awsServices);
+    this.searchService = new SearchService(awsServices);
   }
+
+  reindexAllVideos = async (req: Request, res: Response): Promise<any> => {
+    try {
+      await this.searchService.indexAllExistingVideos();
+      return res.json({ success: true });
+    } catch (error) {
+      console.error("error reindexing videos: ", error);
+      return res.status(500).json({ error: "failed to reindex videos" });
+    }
+  };
 
   getUploadUrl = async (req: Request, res: Response) => {
     try {
@@ -40,7 +53,6 @@ export class VideoController {
       } = req.query;
 
       const hasFilters = search || tags || category;
-      
 
       if (!hasFilters) {
         // If no filters, get directly from S3
@@ -118,6 +130,12 @@ export class VideoController {
           limit: limit ? parseInt(limit as string) : undefined,
         });
 
+        const searchResults = await this.searchService.search(
+          search as string,
+          category as string,
+          tags ? (tags as string).split(",") : undefined
+        );
+
         const videosWithUrls = await Promise.all(
           dbResult.videos.map(async (metadata) => {
             const url = await this.s3Service.getSignedDownloadUrl(metadata.id);
@@ -127,6 +145,18 @@ export class VideoController {
               key: metadata.id,
               url,
               metadata,
+            };
+          })
+        );
+
+        const videosFromOpenSearch = await Promise.all(
+          searchResults.map(async (result) => {
+            const url = await this.s3Service.getSignedDownloadUrl(result.s3Key);
+            return {
+              id: result.s3Key,
+              key: result.s3Key,
+              url,
+              metadata: result,
             };
           })
         );

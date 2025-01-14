@@ -1,5 +1,5 @@
-// src/config/aws.ts
 import { S3Client } from "@aws-sdk/client-s3";
+import { Client } from "@opensearch-project/opensearch";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 import { SSMClient, GetParameterCommand } from "@aws-sdk/client-ssm";
@@ -44,6 +44,9 @@ export async function initializeAwsServices() {
     "/silkstream/aws-secret-access-key"
   );
   const bucketName = await getParameter("/silkstream/bucket-name");
+  const opensearchEndpoint = await getParameter(
+    "/silkstream/opensearch-endpoint"
+  );
 
   const credentials = {
     accessKeyId,
@@ -62,10 +65,19 @@ export async function initializeAwsServices() {
 
   const docClient = DynamoDBDocumentClient.from(dynamoClient);
 
+  const searchClient = new Client({
+    node: opensearchEndpoint,
+    auth: {
+      username: accessKeyId,
+      password: secretAccessKey,
+    },
+  });
+
   return {
     s3Client,
     docClient,
     bucketName,
+    searchClient,
   };
 }
 

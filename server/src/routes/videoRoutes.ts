@@ -22,5 +22,6 @@ export function createVideoRouter(awsServices: AwsServices) {
   router.get("/tags", metadataController.getTags);
   router.get("/categories", metadataController.getCategories);
 
+  router.post("/reindex", videoController.reindexAllVideos);
   return router;
 }

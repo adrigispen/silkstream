@@ -1,13 +1,15 @@
-// src/controllers/metadataController.ts
 import { Request, Response } from "express";
 import { DynamoService } from "../services/dynamoService";
 import type { AwsServices } from "../config/aws";
+import { SearchService } from "../services/searchService";
 
 export class MetadataController {
   private dynamoService: DynamoService;
+  private searchService: SearchService;
 
   constructor(awsServices: AwsServices) {
     this.dynamoService = new DynamoService(awsServices);
+    this.searchService = new SearchService(awsServices);
   }
 
   saveMetadata = async (req: Request, res: Response) => {
@@ -20,6 +22,10 @@ export class MetadataController {
       };
 
       await this.dynamoService.saveMetadata(metadata);
+      await this.searchService.indexVideo(videoId, {
+        ...metadata,
+        s3Key: videoId,
+      });
       res.json({ success: true });
     } catch (error) {
       console.error("Error saving metadata:", error);
@@ -55,6 +61,11 @@ export class MetadataController {
       await this.dynamoService.updateTagsForVideo(oldTags, newTags);
 
       await this.dynamoService.updateMetadata(videoId, updates);
+
+      await this.searchService.indexVideo(videoId, {
+        ...updates,
+        s3Key: videoId,
+      });
 
       res.json({ success: true });
     } catch (error) {
