@@ -21,7 +21,6 @@ const CategorySelect = styled(Select<Option>)`
   min-width: 180px;
   font-family: sans-serif;
   font-size: 13px;
-  text-transform: capitalize;
 `;
 
 const TagsSelect = styled(Select<Option, true>)`
@@ -66,10 +65,10 @@ const VideoFilters: React.FC<VideoFiltersProps> = ({
       />
 
       <CategorySelect
-        placeholder="Select category..."
+        placeholder="Filter by category"
         value={category ? { value: category, label: category } : null}
         options={[
-          { value: "", label: "All Categories" },
+          { value: "", label: "All categories" },
           ...categories.map((cat) => ({
             value: cat,
             label: cat,
@@ -82,8 +81,8 @@ const VideoFilters: React.FC<VideoFiltersProps> = ({
 
       <TagsSelect
         isMulti
-        isClearable // Add this line
-        placeholder="Select tags..."
+        isClearable
+        placeholder="Filter by tag"
         value={selectedTags.map((tag) => ({
           value: tag,
           label: tag,

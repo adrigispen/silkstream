@@ -6,6 +6,7 @@ const Container = styled.div`
   flex-direction: column;
   gap: 0.5rem;
   padding: 1rem;
+  max-width: 200px;
 `;
 
 const Title = styled.h2`

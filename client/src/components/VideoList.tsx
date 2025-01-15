@@ -260,8 +260,9 @@ const VideoList: React.FC = () => {
             <VideoPlayer url={selectedVideo.url} />
           </VideoPlayerWrapper>
           {isEditMode ||
-          !data?.videos.find((video) => video.id === selectedVideo.id)
-            ?.metadata ? (
+          (data?.videos.find((video) => video.id === selectedVideo.id) &&
+            !data?.videos.find((video) => video.id === selectedVideo.id)
+              ?.metadata) ? (
             <VideoMetadataForm
               key={selectedVideo.id}
               videoId={selectedVideo.id}
@@ -278,7 +279,7 @@ const VideoList: React.FC = () => {
               editDetails={() => setIsEditMode(true)}
               metadata={
                 data?.videos.find((video) => video.id === selectedVideo.id)
-                  ?.metadata
+                  ?.metadata ?? selectedVideo.metadata
               }
             />
           )}
@@ -334,7 +335,10 @@ const VideoList: React.FC = () => {
         {data?.videos?.map((video) => (
           <VideoCard
             key={video.id}
-            onClick={() => setSelectedVideo(video)}
+            onClick={() => {
+              setIsEditMode(false);
+              setSelectedVideo(video);
+            }}
             selected={video === selectedVideo}
           >
             <Checkbox

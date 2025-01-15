@@ -8,6 +8,12 @@ import toast from "react-hot-toast";
 import Select, { MultiValue, SingleValue } from "react-select";
 import { Video } from "../types/video";
 
+const ActionsDiv = styled.div`
+  display: flex;
+  flex-direction: column;
+  position: relative;
+`;
+
 const ActionsButton = styled.button`
   padding: 0.5rem 1rem;
   background-color: darkgoldenrod;
@@ -25,17 +31,91 @@ const ActionsButton = styled.button`
   }
 `;
 
+const ActionsSubButton = styled.button`
+  padding: 0.5rem 1rem;
+  background-color: white;
+  height: 30px;
+
+  border: none;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: darkgoldenrod;
+    color: white;
+  }
+`;
+
+const ActionsPanel = styled.div<{ showPanel: boolean }>`
+  display: ${({ showPanel }) => (showPanel ? "flex" : "none")};
+  position: absolute;
+  width: 150px;
+  margin-top: 40px;
+  margin-left: -75px;
+
+  flex-direction: column;
+  background-color: white;
+  border-radius: 4px;
+  padding: 10px 0px;
+  box-shadow: 0 3px 5px 0 rgba(0, 0, 0, 0.1);
+`;
+
+const ButtonPane = styled.div`
+  display: flex;
+`;
+
+const Cancel = styled.button`
+  padding-right: 1rem;
+  background-color: white;
+  color: navy;
+  border: none;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &:hover {
+    color: darkgoldenrod;
+  }
+`;
+
+const BulkUpdateModal = styled.div<{ showModal: boolean }>`
+  display: ${({ showModal }) => (showModal ? "flex" : "none")};
+  position: absolute;
+  margin-top: 40px;
+  max-width: 210px;
+  margin-left: -150px;
+  background-color: white;
+  padding: 20px;
+  border-radius: 5px;
+
+  box-shadow: 0 3px 5px 0 rgba(0, 0, 0, 0.1);
+`;
+
 const CategorySelect = styled(Select<Option>)`
   min-width: 180px;
   font-family: sans-serif;
   font-size: 13px;
-  text-transform: capitalize;
 `;
 
 const TagsSelect = styled(Select<Option, true>)`
   min-width: 180px;
   font-family: sans-serif;
   font-size: 13px;
+`;
+
+const FlexContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+`;
+
+const Description = styled.p`
+  margin-top: -8px;
+  padding: 0px 5px;
+  font-size: 0.8rem;
+  font-style: italic;
+  color: #333;
 `;
 
 interface Option {
@@ -66,6 +146,8 @@ const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
   const handleBatchDelete = async (videoIds: string[]) => {
     try {
       await batchDelete({ videoIds });
+      setShowActions(false);
+      deselectVideos();
       toast.success("Videos deleted");
     } catch (error) {
       toast.error(`Failed to delete videos: ${error}`);
@@ -93,88 +175,113 @@ const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
     });
 
     try {
-      await batchUpsert(updates).unwrap();;
-      toast.success("Videos updated");
+      await batchUpsert(updates).unwrap();
       setSelectedCategory("");
       setSelectedTags([]);
       setShowActions(false);
       setShowBulkUpdate(false);
       deselectVideos();
+      toast.success("Videos updated");
     } catch (error) {
       toast.error(`Failed to update videos: ${error}`);
     }
   };
 
   return (
-    <>
+    <ActionsDiv>
       {selectedVideos.length > 0 && (
-        <ActionsButton onClick={() => setShowActions(true)}>
+        <ActionsButton
+          onClick={() => {
+            setShowActions(showActions ? false : true);
+            if (showBulkUpdate) setShowBulkUpdate(false);
+          }}
+        >
           Actions
         </ActionsButton>
       )}
-      {showActions === true && (
-        <div>
-          <button
+      {selectedVideos.length > 0 && (
+        <ActionsPanel showPanel={showActions}>
+          <ActionsSubButton
             onClick={() =>
               handleBatchDelete(selectedVideos.map((video: Video) => video.id))
             }
           >
-            Delete Videos
-          </button>
-          <button onClick={() => setShowBulkUpdate(true)}>
+            Delete videos
+          </ActionsSubButton>
+          <ActionsSubButton onClick={() => setShowBulkUpdate(true)}>
             Bulk update videos
-          </button>
-        </div>
+          </ActionsSubButton>
+        </ActionsPanel>
       )}
-      {showBulkUpdate && (
-        <div>
-          <CategorySelect
-            placeholder="Select category..."
-            value={
-              selectedCategory
-                ? { value: selectedCategory, label: selectedCategory }
-                : null
-            }
-            options={[
-              { value: "", label: "All Categories" },
-              ...categories.map((cat) => ({
-                value: cat,
-                label: cat,
-              })),
-            ]}
-            onChange={(selectedOption: SingleValue<Option>) =>
-              setSelectedCategory(selectedOption ? selectedOption.value : "")
-            }
-          />
+      {selectedVideos.length > 0 && (
+        <BulkUpdateModal showModal={showBulkUpdate}>
+          <FlexContainer>
+            <CategorySelect
+              placeholder="Change category..."
+              value={
+                selectedCategory
+                  ? { value: selectedCategory, label: selectedCategory }
+                  : null
+              }
+              options={[
+                { value: "", label: "All Categories" },
+                ...categories.map((cat) => ({
+                  value: cat,
+                  label: cat,
+                })),
+              ]}
+              onChange={(selectedOption: SingleValue<Option>) =>
+                setSelectedCategory(selectedOption ? selectedOption.value : "")
+              }
+            />
 
-          <TagsSelect
-            isMulti
-            isClearable
-            placeholder="Select tags..."
-            value={selectedTags.map((tag) => ({
-              value: tag,
-              label: tag,
-            }))}
-            name="tags"
-            options={availableTags.map((tag) => ({
-              value: tag,
-              label: tag,
-            }))}
-            onChange={(selectedOptions: MultiValue<Option>) => {
-              const selected = selectedOptions.map((option) => option.value);
-              setSelectedTags(selected);
-            }}
-          />
-          <button
-            onClick={() =>
-              handleBatchUpdate(selectedVideos, selectedCategory, selectedTags)
-            }
-          >
-            Save
-          </button>
-        </div>
+            <TagsSelect
+              isMulti
+              isClearable
+              placeholder="Change tags..."
+              value={selectedTags.map((tag) => ({
+                value: tag,
+                label: tag,
+              }))}
+              name="tags"
+              options={availableTags.map((tag) => ({
+                value: tag,
+                label: tag,
+              }))}
+              onChange={(selectedOptions: MultiValue<Option>) => {
+                const selected = selectedOptions.map((option) => option.value);
+                setSelectedTags(selected);
+              }}
+            />
+            <Description>
+              If you select new tags, all existing tags will be replaced. Leave
+              tags blank if you only want to update the category.
+            </Description>
+            <ButtonPane>
+              <Cancel
+                onClick={() => {
+                  setShowBulkUpdate(false);
+                  setShowActions(false);
+                }}
+              >
+                Cancel
+              </Cancel>
+              <ActionsButton
+                onClick={() =>
+                  handleBatchUpdate(
+                    selectedVideos,
+                    selectedCategory,
+                    selectedTags
+                  )
+                }
+              >
+                {`Save ${selectedVideos.length} videos`}
+              </ActionsButton>
+            </ButtonPane>
+          </FlexContainer>
+        </BulkUpdateModal>
       )}
-    </>
+    </ActionsDiv>
   );
 };
 
