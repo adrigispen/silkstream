@@ -11,6 +11,7 @@ import { Video } from "../types/video";
 import VideoDetails from "./VideoDetails";
 import VideoFilters from "./VideoFilters";
 import ActionsDropdown from "./ActionsDropdown";
+import Modal from "react-modal";
 
 const Container = styled.div`
   margin: 0 auto;
@@ -29,10 +30,6 @@ const LoadingMessage = styled.div`
 const ErrorMessage = styled.div`
   color: #ef4444;
   padding: 1rem;
-`;
-
-const VideoPlayerWrapper = styled.div`
-  margin-bottom: 2rem;
 `;
 
 const FlexContainer = styled.div`
@@ -154,6 +151,22 @@ const Description = styled.span`
   }
 `;
 
+const ThumbnailContainer = styled.div`
+  position: relative;
+  width: 100px;
+  height: 160px;
+  overflow: hidden;
+`;
+
+const Thumbnail = styled.img`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+`;
+
 const HeaderUploadDate = styled.span`
   width: 10%;
   cursor: pointer;
@@ -200,6 +213,20 @@ const EmptyMessage = styled.div`
   color: #6b7280;
   padding: 2rem;
 `;
+
+const customModalStyles = {
+  content: {
+    top: "50%",
+    left: "50%",
+    right: "auto",
+    bottom: "auto",
+    marginRight: "-50%",
+    transform: "translate(-50%, -50%)",
+    maxWidth: "1000px",
+    width: "80%",
+    padding: "1rem",
+  },
+};
 
 const VideoList: React.FC = () => {
   const [page, setPage] = useState(1);
@@ -254,37 +281,44 @@ const VideoList: React.FC = () => {
 
   return (
     <Container>
-      {selectedVideo && (
-        <FlexContainer>
-          <VideoPlayerWrapper>
-            <VideoPlayer url={selectedVideo.url} />
-          </VideoPlayerWrapper>
-          {isEditMode ||
-          (data?.videos.find((video) => video.id === selectedVideo.id) &&
-            !data?.videos.find((video) => video.id === selectedVideo.id)
-              ?.metadata) ? (
-            <VideoMetadataForm
-              key={selectedVideo.id}
-              videoId={selectedVideo.id}
-              categories={categoriesData?.categories ?? []}
-              metadata={
-                data?.videos.find((video) => video.id === selectedVideo.id)
-                  ?.metadata
-              }
-              uploadDate={selectedVideo.lastModified}
-              closeForm={() => setIsEditMode(false)}
-            />
-          ) : (
-            <VideoDetails
-              editDetails={() => setIsEditMode(true)}
-              metadata={
-                data?.videos.find((video) => video.id === selectedVideo.id)
-                  ?.metadata ?? selectedVideo.metadata
-              }
-            />
-          )}
-        </FlexContainer>
-      )}
+      <Modal
+        isOpen={!!selectedVideo}
+        onRequestClose={() => setSelectedVideo(null)}
+        style={customModalStyles}
+        contentLabel="Video Details"
+      >
+        {selectedVideo && (
+          <FlexContainer>
+            <div>
+              <VideoPlayer url={selectedVideo.url} />
+            </div>
+            {isEditMode ||
+            (data?.videos.find((video) => video.id === selectedVideo.id) &&
+              !data?.videos.find((video) => video.id === selectedVideo.id)
+                ?.metadata) ? (
+              <VideoMetadataForm
+                key={selectedVideo.id}
+                videoId={selectedVideo.id}
+                categories={categoriesData?.categories ?? []}
+                metadata={
+                  data?.videos.find((video) => video.id === selectedVideo.id)
+                    ?.metadata
+                }
+                uploadDate={selectedVideo.lastModified}
+                closeForm={() => setIsEditMode(false)}
+              />
+            ) : (
+              <VideoDetails
+                editDetails={() => setIsEditMode(true)}
+                metadata={
+                  data?.videos.find((video) => video.id === selectedVideo.id)
+                    ?.metadata ?? selectedVideo.metadata
+                }
+              />
+            )}
+          </FlexContainer>
+        )}
+      </Modal>
       <FlexContainer>
         <ActionsRow>
           <VideoFilters
@@ -351,6 +385,16 @@ const VideoList: React.FC = () => {
               }}
               checked={selectedVideos.includes(video) ? true : false}
             />
+            <ThumbnailContainer>
+              {video.thumbnailUrl ? (
+                <Thumbnail
+                  src={video.thumbnailUrl}
+                  alt={video.metadata?.title || "Video thumbnail"}
+                />
+              ) : (
+                <div>No Thumbnail</div> // Or a placeholder image
+              )}
+            </ThumbnailContainer>
             <VideoTitle>
               {video.metadata?.title || formatFileName(video.id)}
             </VideoTitle>

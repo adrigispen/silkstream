@@ -13,9 +13,6 @@ const Form = styled.form`
   flex-direction: column;
   gap: 1rem;
   padding: 1rem;
-  background-color: white;
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 `;
 
 const FormGroup = styled.div`
@@ -33,6 +30,7 @@ const Input = styled.input`
   padding: 0.5rem;
   border: 1px solid #d1d5db;
   border-radius: 0.375rem;
+  width: 100%;
 
   &:focus {
     outline: none;
@@ -47,6 +45,9 @@ const TextArea = styled.textarea`
   border-radius: 0.375rem;
   min-height: 100px;
   resize: vertical;
+  font-family: sans-serif;
+  font-size: 0.85rem;
+  width: 100%;
 
   &:focus {
     outline: none;
@@ -57,10 +58,13 @@ const TextArea = styled.textarea`
 
 const TagInput = styled(Input)`
   margin-bottom: 0.5rem;
+  width: 100%;
+  padding: 0.5rem;
 `;
 
 const TagList = styled.div`
   display: flex;
+  max-width: 200px;
   flex-wrap: wrap;
   gap: 0.5rem;
 `;
@@ -145,7 +149,8 @@ const TagInputContainer = styled.div`
 `;
 
 const CategorySelect = styled(Select<Option>)`
-  min-width: 180px;
+  width: 100%;
+  min-width: 100px;
   font-family: sans-serif;
   font-size: 13px;
   text-transform: capitalize;

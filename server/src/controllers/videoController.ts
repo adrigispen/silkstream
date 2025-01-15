@@ -3,14 +3,17 @@ import { Request, Response } from "express";
 import { S3Service } from "../services/s3Service";
 import { DynamoService } from "../services/dynamoService";
 import type { AwsServices } from "../config/aws";
+import { ThumbnailService } from "../services/thumbnailService";
 
 export class VideoController {
   private s3Service: S3Service;
   private dynamoService: DynamoService;
+  private thumbnailService: ThumbnailService;
 
   constructor(awsServices: AwsServices) {
     this.s3Service = new S3Service(awsServices);
     this.dynamoService = new DynamoService(awsServices);
+    this.thumbnailService = new ThumbnailService(this.s3Service);
   }
 
   getUploadUrl = async (req: Request, res: Response) => {
@@ -56,10 +59,18 @@ export class VideoController {
               object.Key!
             );
 
+            let thumbnailUrl;
+            if (metadataResult.Item?.thumbnailKey) {
+              thumbnailUrl = await this.s3Service.getSignedDownloadUrl(
+                metadataResult.Item.thumbnailKey
+              );
+            }
+
             return {
               id: object.Key,
               key: object.Key,
               url,
+              thumbnailUrl,
               lastModified: object.LastModified,
               size: object.Size,
               metadata: metadataResult.Item || null,
@@ -121,11 +132,20 @@ export class VideoController {
           dbResult.videos.map(async (metadata) => {
             const url = await this.s3Service.getSignedDownloadUrl(metadata.id);
 
+            let thumbnailUrl;
+
+            if (metadata.thumbnailKey) {
+              thumbnailUrl = await this.s3Service.getSignedDownloadUrl(
+                metadata.thumbnailKey
+              );
+            }
+
             return {
               id: metadata.id,
               key: metadata.id,
               url,
               metadata,
+              thumbnailUrl,
             };
           })
         );

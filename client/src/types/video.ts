@@ -13,6 +13,7 @@ export interface Video {
   id: string;
   key: string;
   url: string;
+  thumbnailUrl?: string;
   lastModified: string;
   size: number;
   metadata: VideoMetadata;

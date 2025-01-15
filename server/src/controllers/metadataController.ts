@@ -3,12 +3,18 @@ import { Request, Response } from "express";
 import { DynamoService } from "../services/dynamoService";
 import type { AwsServices } from "../config/aws";
 import { VideoMetadataUpsert } from "../types/video";
+import { ThumbnailService } from "../services/thumbnailService";
+import { S3Service } from "../services/s3Service";
 
 export class MetadataController {
   private dynamoService: DynamoService;
+  private thumbnailService: ThumbnailService;
+  private s3Service: S3Service;
 
   constructor(awsServices: AwsServices) {
     this.dynamoService = new DynamoService(awsServices);
+    this.s3Service = new S3Service(awsServices);
+    this.thumbnailService = new ThumbnailService(this.s3Service);
   }
 
   saveMetadata = async (req: Request, res: Response) => {
@@ -52,10 +58,21 @@ export class MetadataController {
       const existingData = await this.dynamoService.getMetadata(videoId);
       const oldTags = existingData.Item?.tags || [];
       const newTags = updates.tags || [];
-
       await this.dynamoService.updateTagsForVideo(oldTags, newTags);
 
-      await this.dynamoService.updateMetadata(videoId, updates);
+      if (!existingData.Item?.thumbnailKey) {
+        const thumbnailData = await this.thumbnailService.processVideo(videoId);
+        const fullUpdates = {
+          ...updates,
+          thumbnailKey: thumbnailData.thumbnailKey,
+          createdDate: thumbnailData.createdDate?.toISOString(),
+          duration: thumbnailData.duration,
+        };
+
+        await this.dynamoService.updateMetadata(videoId, fullUpdates);
+      } else {
+        await this.dynamoService.updateMetadata(videoId, updates);
+      }
 
       res.json({ success: true });
     } catch (error) {

@@ -23,7 +23,7 @@ const VideoWrapper = styled.div`
 `;
 
 const StyledVideo = styled.video`
-  max-height: 80vh;
+  max-height: 90vh;
   transform: rotate180deg;
   transform-origin: center;
   display: block;
