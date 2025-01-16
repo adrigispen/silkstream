@@ -383,7 +383,7 @@ const VideoList: React.FC = () => {
                 setSelectedVideos(newSelecteds);
                 e.stopPropagation();
               }}
-              checked={selectedVideos.includes(video) ? true : false}
+              defaultChecked={selectedVideos.includes(video) ? true : false}
             />
             <ThumbnailContainer>
               {video.thumbnailUrl ? (
@@ -392,7 +392,9 @@ const VideoList: React.FC = () => {
                   alt={video.metadata?.title || "Video thumbnail"}
                 />
               ) : (
-                <div>No Thumbnail</div> // Or a placeholder image
+                <div>
+                  <img src="/hang.svg" />
+                </div>
               )}
             </ThumbnailContainer>
             <VideoTitle>
