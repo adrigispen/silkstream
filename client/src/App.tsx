@@ -4,6 +4,7 @@ import styled from "styled-components";
 import { Toaster } from "react-hot-toast";
 import { Provider } from "react-redux";
 import { store } from "./store";
+import { PasswordGate } from "./components/PasswordGate";
 
 const AppContainer = styled.div`
   min-height: 100vh;
@@ -48,19 +49,21 @@ const Image = styled.img`
 function App() {
   return (
     <Provider store={store}>
-      <AppContainer>
-        <Toaster position="top-right" />
-        <Header>
-          <HeaderContent>
-            <Image src="/hang.svg" />
-            <HeaderTitle>SilkStream</HeaderTitle>
-            <VideoUpload />
-          </HeaderContent>
-        </Header>
-        <Main>
-          <VideoList />
-        </Main>
-      </AppContainer>
+      <PasswordGate>
+        <AppContainer>
+          <Toaster position="top-right" />
+          <Header>
+            <HeaderContent>
+              <Image src="/hang.svg" />
+              <HeaderTitle>SilkStream</HeaderTitle>
+              <VideoUpload />
+            </HeaderContent>
+          </Header>
+          <Main>
+            <VideoList />
+          </Main>
+        </AppContainer>
+      </PasswordGate>
     </Provider>
   );
 }
