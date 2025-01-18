@@ -36,7 +36,7 @@ export interface VideoQueryParams {
   sortDirection?: "asc" | "desc";
   tags?: string[];
   category?: string;
-  page?: number;
+  pageToken: string;
   limit?: number;
 }
 

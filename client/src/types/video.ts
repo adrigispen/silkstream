@@ -47,6 +47,6 @@ export interface VideoQueryParams {
 
 export interface PaginatedResponse<Video> {
   videos: Video[];
-  nextPage?: string;
+  nextPageToken?: string;
   totalCount: number;
 }

@@ -167,12 +167,12 @@ const Thumbnail = styled.img`
   object-fit: cover;
 `;
 
-const HeaderUploadDate = styled.span`
+const HeaderCreatedDate = styled.span`
   width: 10%;
   cursor: pointer;
 `;
 
-const UploadDate = styled.span`
+const CreatedDate = styled.span`
   color: #6b7280;
   margin: 5px 0px;
   color: #6b7280;
@@ -229,7 +229,7 @@ const customModalStyles = {
 };
 
 const VideoList: React.FC = () => {
-  const [page, setPage] = useState(1);
+  const [pageToken, setPageToken] = useState<string | undefined>(undefined);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -239,8 +239,8 @@ const VideoList: React.FC = () => {
   const [selectedVideos, setSelectedVideos] = useState<Video[]>([]);
 
   const { data, error, isLoading, isFetching } = useGetVideosQuery({
-    page,
-    limit: 1000,
+    pageToken,
+    limit: 10,
     search: searchTerm,
     category: selectedCategory,
     tags: selectedTags,
@@ -253,8 +253,8 @@ const VideoList: React.FC = () => {
   const { data: categoriesData } = useGetCategoriesQuery();
 
   const handleLoadMore = () => {
-    if (data?.nextPage && !isFetching) {
-      setPage((prev) => prev + 1);
+    if (data?.nextPageToken && !isFetching) {
+      setPageToken(data.nextPageToken);
     }
   };
 
@@ -273,8 +273,8 @@ const VideoList: React.FC = () => {
   };
 
   useEffect(() => {
-    setPage(1);
-  }, [searchTerm, selectedCategory, selectedTags]);
+    setPageToken(undefined);
+  }, [searchTerm, selectedCategory, selectedTags, sortBy, sortDirection]);
 
   if (isLoading) return <LoadingMessage>Loading videos...</LoadingMessage>;
   if (error) return <ErrorMessage>Error loading videos</ErrorMessage>;
@@ -356,14 +356,14 @@ const VideoList: React.FC = () => {
             Category
           </HeaderCategory>
           <HeaderDescription>Description</HeaderDescription>
-          <HeaderUploadDate
+          <HeaderCreatedDate
             onClick={() => {
-              setSortBy("uploadDate");
+              setSortBy("createdDate");
               setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
             }}
           >
-            Date uploaded
-          </HeaderUploadDate>
+            Created date
+          </HeaderCreatedDate>
           <HeaderTags>Tags</HeaderTags>
         </HeaderRow>
         {data?.videos?.map((video) => (
@@ -402,9 +402,11 @@ const VideoList: React.FC = () => {
             </VideoTitle>
             <Category>{video.metadata?.category || ""}</Category>
             <Description>{video.metadata?.description || ""}</Description>
-            <UploadDate>
-              {video.lastModified ? formatDate(video.lastModified) : ""}
-            </UploadDate>
+            <CreatedDate>
+              {video.metadata.createdDate
+                ? formatDate(video.metadata.createdDate)
+                : ""}
+            </CreatedDate>
             {video.metadata?.tags && video.metadata.tags.length > 0 && (
               <Tags>
                 {video.metadata.tags.map((tag) => (
@@ -414,7 +416,7 @@ const VideoList: React.FC = () => {
             )}
           </VideoCard>
         ))}
-        {data?.nextPage && (
+        {data?.nextPageToken && (
           <button onClick={handleLoadMore} disabled={isFetching}>
             {isFetching ? "Loading" : "Load More"}
           </button>

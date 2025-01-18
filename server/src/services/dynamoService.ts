@@ -244,8 +244,8 @@ export class DynamoService {
       sortDirection = "desc",
       tags,
       category,
-      page = 1,
-      limit = 1000,
+      pageToken,
+      limit = 10,
     } = params;
 
     let filterExpressions: string[] = [];
@@ -268,24 +268,49 @@ export class DynamoService {
       });
     }
 
-    const command = new ScanCommand({
-      TableName: "silkstream-vids",
-      FilterExpression:
-        filterExpressions.length > 0
-          ? filterExpressions.join(" AND ")
-          : undefined,
-      ExpressionAttributeValues:
-        Object.keys(expressionValues).length > 0 ? expressionValues : undefined,
-      Limit: limit,
-      ExclusiveStartKey:
-        page > 1 ? this.calculateStartKey(page, limit) : undefined,
-    });
+    let exclusiveStartKey;
+    let decodedOffset = 0;
+    if (pageToken) {
+      try {
+        const decoded = JSON.parse(Buffer.from(pageToken, "base64").toString());
+        exclusiveStartKey = decoded.LastEvaluatedKey;
+        decodedOffset = decoded.offset || 0;
+      } catch (error) {
+        console.error("Invalid page token:", error);
+      }
+    }
 
-    const result = await this.services.docClient.send(command);
+    const filteredResults: any[] = [];
+    let lastEvaluatedKey = exclusiveStartKey;
+    let scannedAll = false;
 
-    let sorted = result.Items || [];
+    while (filteredResults.length < decodedOffset + limit && !scannedAll) {
+      const command = new ScanCommand({
+        TableName: "silkstream-vids",
+        FilterExpression:
+          filterExpressions.length > 0
+            ? filterExpressions.join(" AND ")
+            : undefined,
+        ExpressionAttributeValues:
+          Object.keys(expressionValues).length > 0
+            ? expressionValues
+            : undefined,
+        Limit: 1000,
+        ExclusiveStartKey: lastEvaluatedKey,
+      });
+      const result = await this.services.docClient.send(command);
+
+      if (result.Items) {
+        filteredResults.push(...result.Items);
+      }
+
+      lastEvaluatedKey = result.LastEvaluatedKey;
+      scannedAll = !lastEvaluatedKey;
+    }
+
+    let sorted = filteredResults || [];
     if (sortBy && sortBy !== "uploadDate") {
-      sorted = (result.Items || []).sort((a, b) => {
+      sorted = (filteredResults || []).sort((a, b) => {
         let aVal: string, bVal: string;
 
         switch (sortBy) {
@@ -310,10 +335,22 @@ export class DynamoService {
       });
     }
 
+    const paginatedResults = filteredResults.slice(
+      decodedOffset,
+      decodedOffset + limit
+    );
+
+    const nextPageToken =
+      decodedOffset + limit < filteredResults.length
+        ? Buffer.from(
+            JSON.stringify({ lastEvaluatedKey, offset: decodedOffset + limit })
+          ).toString("base64")
+        : null;
+
     return {
       videos: sorted,
-      lastEvaluatedKey: result.LastEvaluatedKey,
-      count: result.Count || 0,
+      nextPageToken,
+      count: filteredResults.length,
     };
   }
 

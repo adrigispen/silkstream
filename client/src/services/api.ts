@@ -18,7 +18,7 @@ export const api = createApi({
     getVideos: builder.query<
       PaginatedResponse<Video>,
       {
-        page?: number;
+        pageToken?: string;
         limit?: number;
         search?: string;
         category?: string;
@@ -29,26 +29,35 @@ export const api = createApi({
     >({
       query: (params = {}) => ({
         url: "videos",
-        params: { ...params, tags: params.tags?.join(",") },
+        params: {
+          ...params,
+          tags: params.tags?.join(","),
+          limit: params.limit || 10,
+        },
       }),
       providesTags: ["Videos"],
-      serializeQueryArgs: ({ queryArgs }) => {
-        // Cache separately based on filters but not page
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { page, ...rest } = queryArgs;
-        return rest;
-      },
-      merge: (currentCache, newItems) => {
-        // Merge new pages into existing cache
-        if (currentCache && newItems.nextPage) {
-          currentCache.videos.push(...newItems.videos);
-          currentCache.nextPage = newItems.nextPage;
-          return currentCache;
+      merge: (currentCache, newItems, { arg }) => {
+        if (!arg?.pageToken) {
+          return newItems;
         }
-        return newItems;
+        return {
+          videos: [...currentCache.videos, ...newItems.videos],
+          totalCount: newItems.totalCount,
+          nextPageToken: newItems.nextPageToken,
+        };
       },
       forceRefetch({ currentArg, previousArg }) {
-        return currentArg?.page !== previousArg?.page;
+        if (!currentArg || !previousArg) return false;
+
+        const currentFilters = { ...currentArg };
+        const previousFilters = { ...previousArg };
+        delete currentFilters.pageToken;
+        delete previousFilters.pageToken;
+
+        return (
+          currentArg.pageToken !== previousArg.pageToken ||
+          JSON.stringify(currentFilters) !== JSON.stringify(previousFilters)
+        );
       },
     }),
     getVideoMetadata: builder.query<VideoMetadata, string>({

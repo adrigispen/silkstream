@@ -34,8 +34,8 @@ export class VideoController {
         sortDirection = "desc",
         tags,
         category,
-        page,
-        limit,
+        pageToken,
+        limit = 10,
       } = req.query;
 
       const hasFilters = search || tags || category;
@@ -45,7 +45,7 @@ export class VideoController {
         const response = await this.s3Service.listS3Objects();
 
         if (!response.Contents) {
-          return res.json({ videos: [] });
+          return res.json({ videos: [], totalCount: 0, nextPageToken: null });
         }
 
         const videos = await Promise.all(
@@ -109,9 +109,18 @@ export class VideoController {
           });
         }
 
+        const pageSize = parseInt(limit as string) || 10;
+        const startIndex = pageToken
+          ? parseInt(pageToken as string) * pageSize
+          : 0;
+        const endIndex = startIndex + pageSize;
+        const paginatedVideos = sorted.slice(startIndex, endIndex);
+
         return res.json({
-          videos: sorted,
-          count: videos.length,
+          videos: paginatedVideos,
+          totalCount: videos.length,
+          nextPageToken:
+            endIndex < videos.length ? String(startIndex + 1) : null,
         });
       } else {
         const dbResult = await this.dynamoService.queryVideos({
@@ -120,14 +129,13 @@ export class VideoController {
           sortDirection: sortDirection as "asc" | "desc",
           tags: tags ? (tags as string).split(",") : undefined,
           category: category as string,
-          page: page ? parseInt(page as string) : undefined,
+          pageToken: pageToken as string,
           limit: limit ? parseInt(limit as string) : undefined,
         });
 
         const videosWithUrls = await Promise.all(
           dbResult.videos.map(async (metadata) => {
             const url = await this.s3Service.getSignedDownloadUrl(metadata.id);
-
             let thumbnailUrl;
 
             if (metadata.thumbnailKey) {
@@ -148,8 +156,8 @@ export class VideoController {
 
         return res.json({
           videos: videosWithUrls,
-          lastEvaluatedKey: dbResult.lastEvaluatedKey,
-          count: dbResult.count,
+          totalCount: dbResult.count,
+          nextPageToken: dbResult.nextPageToken,
         });
       }
     } catch (error) {

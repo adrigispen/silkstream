@@ -135,9 +135,27 @@ export class MetadataController {
             //   update.metadata
             // );
           } else {
+            const existingData = await this.dynamoService.getMetadata(
+              update.videoId
+            );
+
+            let fullUpdates = update.metadata;
+
+            if (!existingData.Item?.thumbnailKey) {
+              const thumbnailData = await this.thumbnailService.processVideo(
+                update.videoId
+              );
+              fullUpdates = {
+                ...update.metadata,
+                thumbnailKey: thumbnailData.thumbnailKey,
+                createdDate: thumbnailData.createdDate?.toISOString(),
+                duration: thumbnailData.duration,
+              };
+            }
+
             await this.dynamoService.updateMetadata(
               update.videoId,
-              update.metadata
+              fullUpdates
             );
             // Update search index
             // await this.searchService.indexVideo(
