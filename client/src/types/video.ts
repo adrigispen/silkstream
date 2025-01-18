@@ -7,6 +7,10 @@ export interface VideoMetadata {
   originalFileName?: string;
   s3Key: string;
   uploadDate: string;
+
+  thumbnailKey?: string;
+  createdDate?: string;
+  duration?: number;
 }
 
 export interface Video {

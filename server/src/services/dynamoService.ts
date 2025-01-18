@@ -297,6 +297,9 @@ export class DynamoService {
             aVal = a.category || "";
             bVal = b.category || "";
             break;
+          case "createdDate":
+            aVal = new Date(a.createdDate || "").getTime().toString();
+            bVal = new Date(b.createdDate || "").getTime().toString();
           default:
             return 0;
         }

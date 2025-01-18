@@ -9,7 +9,7 @@ export interface VideoMetadata {
   uploadDate: string;
 
   thumbnailKey?: string;
-  createdDate?: string;  // ISO string
+  createdDate?: string; // ISO string
   duration?: number;
   processingError?: string;
 }
@@ -32,7 +32,7 @@ export interface Video {
 
 export interface VideoQueryParams {
   search?: string;
-  sortBy?: "title" | "category" | "uploadDate" | "size";
+  sortBy?: "title" | "category" | "uploadDate" | "size" | "createdDate";
   sortDirection?: "asc" | "desc";
   tags?: string[];
   category?: string;
@@ -42,6 +42,9 @@ export interface VideoQueryParams {
 
 export interface VideoMetadataUpsert {
   videoId: string;
-  metadata: Partial<VideoMetadata> & { s3Key: string; uploadDate: string };
+  metadata: Partial<VideoMetadata> & {
+    s3Key: string;
+    uploadDate: string;
+  };
   isNew?: boolean;
 }

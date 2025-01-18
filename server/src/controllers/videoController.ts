@@ -1,19 +1,15 @@
-// src/controllers/videoController.ts
 import { Request, Response } from "express";
 import { S3Service } from "../services/s3Service";
 import { DynamoService } from "../services/dynamoService";
 import type { AwsServices } from "../config/aws";
-import { ThumbnailService } from "../services/thumbnailService";
 
 export class VideoController {
   private s3Service: S3Service;
   private dynamoService: DynamoService;
-  private thumbnailService: ThumbnailService;
 
   constructor(awsServices: AwsServices) {
     this.s3Service = new S3Service(awsServices);
     this.dynamoService = new DynamoService(awsServices);
-    this.thumbnailService = new ThumbnailService(this.s3Service);
   }
 
   getUploadUrl = async (req: Request, res: Response) => {
@@ -103,13 +99,13 @@ export class VideoController {
           });
         } else {
           sorted = [...videos].sort((a, b) => {
-            if (!a.metadata) return -1;
-            if (!b.metadata) return 1;
+            if (!a.metadata?.createdDate) return -1;
+            if (!b.metadata?.createdDate) return 1;
             return sortDirection === "desc"
-              ? new Date(b.lastModified || "").getTime() -
-                  new Date(a.lastModified || "").getTime()
-              : new Date(a.lastModified || "").getTime() -
-                  new Date(b.lastModified || "").getTime();
+              ? new Date(b.metadata.createdDate || "").getTime() -
+                  new Date(a.metadata.createdDate || "").getTime()
+              : new Date(a.metadata.createdDate || "").getTime() -
+                  new Date(b.metadata.createdDate || "").getTime();
           });
         }
 

@@ -116,6 +116,8 @@ export const api = createApi({
           uploadDate: string;
           originalFileName: string;
           s3Key: string;
+          thumbnailKey?: string;
+          createdDate?: string;
         };
         isNew: boolean;
       }[]
