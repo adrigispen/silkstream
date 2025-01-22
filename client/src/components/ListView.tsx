@@ -1,4 +1,5 @@
-import { VideosViewProps } from "../types/video";
+import { Link } from "react-router-dom";
+import { ArchiveViewProps } from "../types/video";
 import styled from "styled-components";
 
 const Container = styled.div`
@@ -13,9 +14,9 @@ const VideosList = styled.div`
   width: 100%;
 `;
 
-const VideoRow = styled.div<{ selected: boolean }>`
+const VideoRow = styled.div`
   border: 1px solid #e5e7eb;
-  background-color: ${({ selected }) => (selected ? "#ffeec2" : "white")};
+  background-color: white;
   border-radius: 0.5rem;
   display: flex;
   align-items: center;
@@ -123,10 +124,13 @@ const Tag = styled.span`
   color: white;
 `;
 
-const ListView: React.FC<VideosViewProps> = ({
-  videos,
-  selectVideo,
-  selectedVideo,
+const LinkWrapper = styled(Link)`
+  text-decoration: none;
+  color: inherit;
+`;
+
+const ListView: React.FC<ArchiveViewProps> = ({
+  metadata,
   sortBy,
   order,
   selectedVideoIds,
@@ -134,42 +138,34 @@ const ListView: React.FC<VideosViewProps> = ({
   formatDate,
   formatFileName,
 }) => {
-  const videosList = videos.map((video) => (
-    <VideoRow
-      key={video.id}
-      onClick={() => {
-        selectVideo(video);
-      }}
-      selected={video === selectedVideo}
-    >
-      <Checkbox
-        onClick={(e) => {
-          const newSelectedIds = selectedVideoIds.includes(video.id)
-            ? selectedVideoIds.filter((id) => id !== video.id)
-            : selectedVideoIds.concat(video.id);
-          selectVideoIds(newSelectedIds);
-          e.stopPropagation();
-        }}
-        defaultChecked={selectedVideoIds.includes(video.id) ? true : false}
-      />
-      <VideoTitle>
-        {video.metadata?.title || formatFileName(video.id)}
-      </VideoTitle>
-      <Category>{video.metadata?.category || ""}</Category>
-      <Description>{video.metadata?.description || ""}</Description>
-      <CreatedDate>
-        {video.metadata?.createdDate
-          ? formatDate(video.metadata.createdDate)
-          : ""}
-      </CreatedDate>
-      {video.metadata?.tags && video.metadata.tags.length > 0 && (
-        <Tags>
-          {video.metadata.tags.map((tag) => (
-            <Tag key={tag}>{tag}</Tag>
-          ))}
-        </Tags>
-      )}
-    </VideoRow>
+  const videosList = metadata.map((video) => (
+    <LinkWrapper to={`/videos/${encodeURIComponent(video.id)}`}>
+      <VideoRow key={video.id}>
+        <Checkbox
+          onClick={(e) => {
+            const newSelectedIds = selectedVideoIds.includes(video.id)
+              ? selectedVideoIds.filter((id) => id !== video.id)
+              : selectedVideoIds.concat(video.id);
+            selectVideoIds(newSelectedIds);
+            e.stopPropagation();
+          }}
+          defaultChecked={selectedVideoIds.includes(video.id) ? true : false}
+        />
+        <VideoTitle>{video.title || formatFileName(video.id)}</VideoTitle>
+        <Category>{video.category || ""}</Category>
+        <Description>{video.description || ""}</Description>
+        <CreatedDate>
+          {video.createdDate ? formatDate(video.createdDate) : ""}
+        </CreatedDate>
+        {video.tags && video.tags.length > 0 && (
+          <Tags>
+            {video.tags.map((tag) => (
+              <Tag key={tag}>{tag}</Tag>
+            ))}
+          </Tags>
+        )}
+      </VideoRow>
+    </LinkWrapper>
   ));
 
   return (

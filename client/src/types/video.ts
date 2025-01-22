@@ -51,10 +51,26 @@ export interface PaginatedResponse<Video> {
   totalCount: number;
 }
 
+export interface PaginatedMetadataResponse<VideoMetadata> {
+  metadata: VideoMetadata[];
+  nextPageToken?: string;
+  totalCount: number;
+}
+
 export interface VideosViewProps {
   videos: Video[];
   selectVideo: (video: Video) => void;
   selectedVideo: Video | null;
+  sortBy: (property: string) => void;
+  order: () => void;
+  selectedVideoIds: string[];
+  selectVideoIds: (ids: string[]) => void;
+  formatDate: (date: string) => string;
+  formatFileName: (name: string) => string;
+}
+
+export interface ArchiveViewProps {
+  metadata: VideoMetadata[];
   sortBy: (property: string) => void;
   order: () => void;
   selectedVideoIds: string[];

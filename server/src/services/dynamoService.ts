@@ -362,4 +362,79 @@ export class DynamoService {
       })
     );
   }
+
+  async toggleFavorite(videoId: string): Promise<boolean> {
+    try {
+      const existingFavorite = await this.services.docClient.send(
+        new GetCommand({
+          TableName: "silkstream-favorites",
+          Key: {
+            videoId,
+          },
+        })
+      );
+
+      if (existingFavorite.Item) {
+        // Remove favorite
+        await this.services.docClient.send(
+          new DeleteCommand({
+            TableName: "silkstream-favorites",
+            Key: {
+              videoId,
+            },
+          })
+        );
+        return false; // Indicates removal
+      } else {
+        // Add favorite
+        await this.services.docClient.send(
+          new PutCommand({
+            TableName: "silkstream-favorites",
+            Item: {
+              videoId,
+              favoriteTimestamp: new Date().toISOString(),
+            },
+          })
+        );
+        return true; // Indicates addition
+      }
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+      throw error;
+    }
+  }
+
+  async getRandomFavorites(limit: number = 20): Promise<any[]> {
+    try {
+      // Get all favorites
+      const result = await this.services.docClient.send(
+        new ScanCommand({
+          TableName: "silkstream-favorites",
+        })
+      );
+
+      if (!result.Items?.length) {
+        return [];
+      }
+
+      // Shuffle the favorites
+      const shuffled = [...result.Items].sort(() => 0.5 - Math.random());
+
+      // Take only the number we need
+      const selectedFavorites = shuffled.slice(0, limit);
+
+      // Get the full video details for each favorite
+      const videoDetails = await Promise.all(
+        selectedFavorites.map(async (fav) => {
+          const videoResult = await this.getMetadata(fav.videoId);
+          return videoResult.Item;
+        })
+      );
+
+      return videoDetails.filter(Boolean); // Remove any null results
+    } catch (error) {
+      console.error("Error getting random favorites:", error);
+      throw error;
+    }
+  }
 }

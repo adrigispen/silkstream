@@ -36,7 +36,9 @@ export class VideoController {
 
       let thumbnailUrl;
       if (metadata.thumbnailKey) {
-        thumbnailUrl = await this.s3Service.getSignedDownloadUrl(metadata.thumbnailKey);
+        thumbnailUrl = await this.s3Service.getSignedDownloadUrl(
+          metadata.thumbnailKey
+        );
       }
 
       const response = {
@@ -68,86 +70,32 @@ export class VideoController {
       const hasFilters = search || tags || category;
 
       if (!hasFilters) {
-        // If no filters, get directly from S3
-        const response = await this.s3Service.listS3Objects();
+        const favorites = await this.dynamoService.getRandomFavorites(20);
 
-        if (!response.Contents) {
-          return res.json({ videos: [], totalCount: 0, nextPageToken: null });
-        }
-
-        const videos = await Promise.all(
-          response.Contents.map(async (object) => {
-            const url = await this.s3Service.getSignedDownloadUrl(object.Key!);
-            const metadataResult = await this.dynamoService.getMetadata(
-              object.Key!
-            );
-
+        const favoritesWithUrls = await Promise.all(
+          favorites.map(async (metadata) => {
+            const url = await this.s3Service.getSignedDownloadUrl(metadata.id);
             let thumbnailUrl;
-            if (metadataResult.Item?.thumbnailKey) {
+
+            if (metadata.thumbnailKey) {
               thumbnailUrl = await this.s3Service.getSignedDownloadUrl(
-                metadataResult.Item.thumbnailKey
+                metadata.thumbnailKey
               );
             }
 
             return {
-              id: object.Key,
-              key: object.Key,
+              id: metadata.id,
+              key: metadata.id,
               url,
+              metadata,
               thumbnailUrl,
-              lastModified: object.LastModified,
-              size: object.Size,
-              metadata: metadataResult.Item || null,
             };
           })
         );
-
-        let sorted;
-
-        if (sortBy && sortBy !== "uploadDate") {
-          sorted = [...videos].sort((a, b) => {
-            let aVal: string, bVal: string;
-
-            switch (sortBy) {
-              case "title":
-                aVal = a.metadata?.title || "";
-                bVal = b.metadata?.title || "";
-                break;
-              case "category":
-                aVal = a.metadata?.category || "";
-                bVal = b.metadata?.category || "";
-                break;
-              default:
-                return 0;
-            }
-
-            return sortDirection === "desc"
-              ? aVal.toLowerCase().localeCompare(bVal.toLowerCase())
-              : bVal.toLowerCase().localeCompare(aVal.toLowerCase());
-          });
-        } else {
-          sorted = [...videos].sort((a, b) => {
-            if (!a.metadata?.createdDate) return -1;
-            if (!b.metadata?.createdDate) return 1;
-            return sortDirection === "desc"
-              ? new Date(b.metadata.createdDate || "").getTime() -
-                  new Date(a.metadata.createdDate || "").getTime()
-              : new Date(a.metadata.createdDate || "").getTime() -
-                  new Date(b.metadata.createdDate || "").getTime();
-          });
-        }
-
-        const pageSize = parseInt(limit as string) || 10;
-        const startIndex = pageToken
-          ? parseInt(pageToken as string) * pageSize
-          : 0;
-        const endIndex = startIndex + pageSize;
-        const paginatedVideos = sorted.slice(startIndex, endIndex);
-
         return res.json({
-          videos: paginatedVideos,
-          totalCount: videos.length,
-          nextPageToken:
-            endIndex < videos.length ? String(startIndex / pageSize + 1) : null,
+          videos: favoritesWithUrls,
+          totalCount: favorites.length,
+          nextPageToken: "",
         });
       } else {
         const dbResult = await this.dynamoService.queryVideos({
@@ -193,6 +141,64 @@ export class VideoController {
     }
   };
 
+  listAllVideos = async (req: Request, res: Response): Promise<any> => {
+    try {
+      const {
+        sortBy,
+        sortDirection = "desc",
+        pageToken,
+        limit = 20,
+      } = req.query;
+      const response = await this.dynamoService.getAllVideos();
+      let sorted;
+      if (sortBy && sortBy !== "uploadDate") {
+        sorted = [...response].sort((a, b) => {
+          let aVal: string, bVal: string;
+          switch (sortBy) {
+            case "title":
+              aVal = a.title || "";
+              bVal = b.title || "";
+              break;
+            case "category":
+              aVal = a.category || "";
+              bVal = b.category || "";
+              break;
+            default:
+              return 0;
+          }
+          return sortDirection === "desc"
+            ? aVal.toLowerCase().localeCompare(bVal.toLowerCase())
+            : bVal.toLowerCase().localeCompare(aVal.toLowerCase());
+        });
+      } else {
+        sorted = [...response].sort((a, b) => {
+          if (!a.createdDate) return -1;
+          if (!b.createdDate) return 1;
+          return sortDirection === "desc"
+            ? new Date(b.createdDate || "").getTime() -
+                new Date(a.createdDate || "").getTime()
+            : new Date(a.createdDate || "").getTime() -
+                new Date(b.createdDate || "").getTime();
+        });
+      }
+      const pageSize = parseInt(limit as string) || 20;
+      const startIndex = pageToken
+        ? parseInt(pageToken as string) * pageSize
+        : 0;
+      const endIndex = startIndex + pageSize;
+      const paginatedMetadata = sorted.slice(startIndex, endIndex);
+      return res.json({
+        metadata: paginatedMetadata,
+        totalCount: response.length,
+        nextPageToken:
+          endIndex < response.length ? String(startIndex / pageSize + 1) : null,
+      });
+    } catch (error) {
+      console.error("Error listing videos:", error);
+      res.status(500).json({ error: "Failed to list videos" });
+    }
+  };
+
   deleteVideo = async (req: Request, res: Response): Promise<any> => {
     try {
       const { videoId } = req.params;
@@ -227,6 +233,30 @@ export class VideoController {
     } catch (error) {
       console.error("Error deleting videos:", error);
       return res.status(500).json({ error: "Failed to delete videos" });
+    }
+  };
+
+  toggleFavorite = async (req: Request, res: Response): Promise<any> => {
+    try {
+      const { videoId } = req.params;
+      const isFavorited = await this.dynamoService.toggleFavorite(videoId);
+      return res.json({ isFavorited });
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+      return res
+        .status(500)
+        .json({ error: "Failed to toggle favorite status" });
+    }
+  };
+
+  getRandomFavorites = async (req: Request, res: Response): Promise<any> => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
+      const favorites = await this.dynamoService.getRandomFavorites(limit);
+      return res.json({ videos: favorites });
+    } catch (error) {
+      console.error("Error getting random favorites:", error);
+      return res.status(500).json({ error: "Failed to get random favorites" });
     }
   };
 }

@@ -11,7 +11,7 @@ const Container = styled.div`
 
 const VideoCard = styled.div`
   border: 1px solid #e5e7eb;
-  background-color: "white";
+  background-color: white;
   border-radius: 0.5rem;
   display: flex;
   align-items: flex-start;
@@ -36,7 +36,7 @@ const MetadataContainer = styled.div`
 `;
 
 const Checkbox = styled.input.attrs({ type: "checkbox" })`
-  //   display: none;
+  display: none;
   align-self: flex-start;
   margin: -10px;
 `;
@@ -139,14 +139,15 @@ const CardView: React.FC<VideosViewProps> = ({
 
       <MetadataContainer
         onClick={() => {
-          selectVideo(video);
+          if (selectVideo) {
+            selectVideo(video);
+          }
         }}
       >
         <VideoTitle>
           {video.metadata?.title || formatFileName(video.id)}
         </VideoTitle>
         <Category>{video.metadata?.category || ""}</Category>
-        <Category>{video.metadata?.id.split("/").pop() || ""}</Category>
         <Description>{video.metadata?.description || ""}</Description>
         <CreatedDate>
           {video.metadata?.createdDate

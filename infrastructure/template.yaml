@@ -4,7 +4,7 @@ Description: SilkStream API
 
 Globals:
   Function:
-    Timeout: 120
+    Timeout: 180
     Runtime: nodejs18.x
     Environment:
       Variables:
@@ -50,7 +50,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref SilkStreamApi
-            Path: /videos/{videoId+} 
+            Path: /videos/{videoId}
             Method: GET
         GetUploadUrl:
           Type: Api
@@ -100,6 +100,24 @@ Resources:
             RestApiId: !Ref SilkStreamApi
             Path: /videos/{videoId}
             Method: DELETE
+        ToggleFavorite:
+          Type: Api
+          Properties:
+            RestApiId: !Ref SilkStreamApi
+            Path: /videos/{videoId}/favorite
+            Method: POST
+        GetRandomFavorites:
+          Type: Api
+          Properties:
+            RestApiId: !Ref SilkStreamApi
+            Path: /videos/random-favorites
+            Method: GET
+        GetAllVideos:
+          Type: Api
+          Properties:
+            RestApiId: !Ref SilkStreamApi
+            Path: /videos-archive
+            Method: GET
       Policies:
         - S3CrudPolicy:
             BucketName: silkstream-vids
@@ -107,6 +125,8 @@ Resources:
             TableName: silkstream-vids
         - DynamoDBCrudPolicy:
             TableName: silkstream-tags
+        - DynamoDBCrudPolicy:
+            TableName: silkstream-favorites
         - Statement:
             - Effect: Allow
               Action:
@@ -114,3 +134,15 @@ Resources:
                 - ssm:GetParameters
                 - ssm:GetParametersByPath
               Resource: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/silkstream/*"
+
+  SilkStreamFavoritesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: silkstream-favorites
+      AttributeDefinitions:
+        - AttributeName: videoId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: videoId
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST

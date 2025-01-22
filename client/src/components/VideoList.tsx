@@ -12,7 +12,6 @@ import VideoDetails from "./VideoDetails";
 import VideoFilters from "./VideoFilters";
 import ActionsDropdown from "./ActionsDropdown";
 import Modal from "react-modal";
-// import ListView from "./ListView";
 import CardView from "./CardView";
 
 const Button = styled.button`

@@ -7,6 +7,7 @@ import { store } from "./store";
 import { PasswordGate } from "./components/PasswordGate";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import SingleVideoView from "./components/SingleVideoView";
+import ArchiveList from "./components/ArchiveList";
 
 const AppContainer = styled.div`
   min-height: 100vh;
@@ -66,6 +67,7 @@ function App() {
               <Routes>
                 <Route path="/" element={<VideoList />} />
                 <Route path="/videos/:videoId" element={<SingleVideoView />} />
+                <Route path="/videos-archive" element={<ArchiveList />} />
               </Routes>
             </Main>
           </AppContainer>

@@ -4,6 +4,7 @@ import {
   VideoMetadata,
   TagSuggestion,
   PaginatedResponse,
+  PaginatedMetadataResponse,
 } from "../types/video";
 
 interface UploadUrlResponse {
@@ -14,7 +15,7 @@ interface UploadUrlResponse {
 export const api = createApi({
   reducerPath: "api",
   baseQuery: fetchBaseQuery({ baseUrl: import.meta.env.VITE_API_URL }),
-  tagTypes: ["Videos"],
+  tagTypes: ["Videos", "Favorites"],
   endpoints: (builder) => ({
     getVideos: builder.query<
       PaginatedResponse<Video>,
@@ -43,6 +44,47 @@ export const api = createApi({
         }
         return {
           videos: [...currentCache.videos, ...newItems.videos],
+          totalCount: newItems.totalCount,
+          nextPageToken: newItems.nextPageToken,
+        };
+      },
+      forceRefetch({ currentArg, previousArg }) {
+        if (!currentArg || !previousArg) return false;
+
+        const currentFilters = { ...currentArg };
+        const previousFilters = { ...previousArg };
+        delete currentFilters.pageToken;
+        delete previousFilters.pageToken;
+
+        return (
+          currentArg.pageToken !== previousArg.pageToken ||
+          JSON.stringify(currentFilters) !== JSON.stringify(previousFilters)
+        );
+      },
+    }),
+    getAllVideos: builder.query<
+      PaginatedMetadataResponse<VideoMetadata>,
+      {
+        pageToken?: string;
+        limit?: number;
+        sortBy?: string;
+        sortDirection?: string;
+      }
+    >({
+      query: (params = {}) => ({
+        url: "videos-archive",
+        params: {
+          ...params,
+          limit: params.limit || 20,
+        },
+      }),
+      providesTags: ["Videos"],
+      merge: (currentCache, newItems, { arg }) => {
+        if (!arg?.pageToken) {
+          return newItems;
+        }
+        return {
+          metadata: [...currentCache.metadata, ...newItems.metadata],
           totalCount: newItems.totalCount,
           nextPageToken: newItems.nextPageToken,
         };
@@ -145,6 +187,22 @@ export const api = createApi({
       }),
       invalidatesTags: ["Videos"],
     }),
+    toggleFavorite: builder.mutation<{ isFavorited: boolean }, string>({
+      query: (videoId) => ({
+        url: `videos/${encodeURIComponent(videoId)}/favorite`,
+        method: "POST",
+      }),
+      // Invalidate relevant queries when a favorite is toggled
+      invalidatesTags: ["Videos", "Favorites"],
+    }),
+
+    getRandomFavorites: builder.query<Video[], number | void>({
+      query: (limit = 20) => ({
+        url: "videos/random-favorites",
+        params: { limit },
+      }),
+      providesTags: ["Favorites"],
+    }),
   }),
 });
 
@@ -161,4 +219,7 @@ export const {
   useBatchDeleteVideosMutation,
   useBatchUpsertMetadataMutation,
   useGetVideoByIdQuery,
+  useToggleFavoriteMutation,
+  useGetRandomFavoritesQuery,
+  useGetAllVideosQuery,
 } = api;

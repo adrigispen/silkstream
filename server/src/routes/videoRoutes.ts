@@ -10,6 +10,7 @@ export function createVideoRouter(awsServices: AwsServices) {
 
   router.post("/get-upload-url", videoController.getUploadUrl);
   router.get("/videos", videoController.listVideos);
+  router.get("/videos-archive", videoController.listAllVideos);
   router.get("/videos/:videoId", videoController.getVideoById);
 
   router.post("/videos/:videoId/metadata", metadataController.saveMetadata);
@@ -26,6 +27,9 @@ export function createVideoRouter(awsServices: AwsServices) {
   router.post("/videos/batch-upsert", metadataController.batchUpsertMetadata);
   router.delete("/videos/:videoId", videoController.deleteVideo);
   router.post("/videos/batch-delete", videoController.batchDeleteVideos);
+
+  router.post("/videos/:videoId/favorite", videoController.toggleFavorite);
+  router.get("/videos/random-favorites", videoController.getRandomFavorites);
 
   return router;
 }
