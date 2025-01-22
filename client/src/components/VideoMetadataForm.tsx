@@ -5,7 +5,7 @@ import {
   useUpdateVideoMetadataMutation,
 } from "../services/api";
 import { toast } from "react-hot-toast";
-import { TagSuggestion } from "../types/video";
+import { TagSuggestion, VideoMetadata } from "../types/video";
 import Select from "react-select";
 
 const Form = styled.form`

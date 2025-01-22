@@ -26,6 +26,33 @@ export class VideoController {
     }
   };
 
+  getVideoById = async (req: Request, res: Response): Promise<any> => {
+    try {
+      const videoId = req.params.videoId;
+      const dbResult = await this.dynamoService.getMetadata(videoId);
+
+      const metadata = dbResult?.Item || {};
+      const url = await this.s3Service.getSignedDownloadUrl(videoId);
+
+      let thumbnailUrl;
+      if (metadata.thumbnailKey) {
+        thumbnailUrl = await this.s3Service.getSignedDownloadUrl(metadata.thumbnailKey);
+      }
+
+      const response = {
+        id: metadata.id,
+        key: metadata.id,
+        url,
+        metadata,
+        thumbnailUrl,
+      };
+      return res.json(response);
+    } catch (error) {
+      console.error("Error getting video:", error);
+      return res.status(500).json({ error: `Failed to get video` });
+    }
+  };
+
   listVideos = async (req: Request, res: Response): Promise<any> => {
     try {
       const {
@@ -120,7 +147,7 @@ export class VideoController {
           videos: paginatedVideos,
           totalCount: videos.length,
           nextPageToken:
-            endIndex < videos.length ? String(startIndex + 1) : null,
+            endIndex < videos.length ? String(startIndex / pageSize + 1) : null,
         });
       } else {
         const dbResult = await this.dynamoService.queryVideos({

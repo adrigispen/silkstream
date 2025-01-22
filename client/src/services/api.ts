@@ -12,6 +12,7 @@ interface UploadUrlResponse {
 }
 
 export const api = createApi({
+  reducerPath: "api",
   baseQuery: fetchBaseQuery({ baseUrl: import.meta.env.VITE_API_URL }),
   tagTypes: ["Videos"],
   endpoints: (builder) => ({
@@ -59,6 +60,12 @@ export const api = createApi({
           JSON.stringify(currentFilters) !== JSON.stringify(previousFilters)
         );
       },
+    }),
+    getVideoById: builder.query<Video, string>({
+      query: (id) => `videos/${encodeURIComponent(id)}`,
+      providesTags: (_result, _error, videoId) => [
+        { type: "Videos", id: videoId },
+      ],
     }),
     getVideoMetadata: builder.query<VideoMetadata, string>({
       query: (videoId) => `videos/${videoId}/metadata`,
@@ -122,7 +129,7 @@ export const api = createApi({
         metadata: {
           tags?: string[];
           category?: string;
-          uploadDate: string;
+          uploadDate?: string;
           originalFileName: string;
           s3Key: string;
           thumbnailKey?: string;
@@ -153,4 +160,5 @@ export const {
   useDeleteVideoMutation,
   useBatchDeleteVideosMutation,
   useBatchUpsertMetadataMutation,
+  useGetVideoByIdQuery,
 } = api;

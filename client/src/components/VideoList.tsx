@@ -12,6 +12,26 @@ import VideoDetails from "./VideoDetails";
 import VideoFilters from "./VideoFilters";
 import ActionsDropdown from "./ActionsDropdown";
 import Modal from "react-modal";
+// import ListView from "./ListView";
+import CardView from "./CardView";
+
+const Button = styled.button`
+  align-self: center;
+  padding: 0.5rem 1rem;
+  background-color: darkgoldenrod;
+  min-height: 38px;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: goldenrod;
+    color: white;
+  }
+`;
 
 const Container = styled.div`
   margin: 0 auto;
@@ -39,7 +59,7 @@ const FlexContainer = styled.div`
   gap: 1rem;
   width: 100%;
   @media (min-width: 768px) {
-    gap: 0.2rem;
+    gap: 1rem;
   }
 `;
 
@@ -52,162 +72,6 @@ const ActionsRow = styled.div`
   align-items: center;
 `;
 
-const VideoCard = styled.div<{ selected: boolean }>`
-  border: 1px solid #e5e7eb;
-  background-color: ${({ selected }) => (selected ? "#ffeec2" : "white")};
-  border-radius: 0.5rem;
-  display: flex;
-  flex-direction: column;
-  padding: 0.5rem 1rem;
-  cursor: pointer;
-  width: 35vw;
-  transition: background-color 0.2s;
-  gap: 0.2rem;
-
-  @media (min-width: 768px) {
-    flex-direction: row;
-    width: 100%;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  &:hover {
-    background-color: rgb(255, 247, 228);
-  }
-`;
-
-const Checkbox = styled.input.attrs({ type: "checkbox" })`
-  align-self: flex-start;
-
-  @media (min-width: 768px) {
-    align-self: center;
-    width: 30px;
-    margin-left: -5px;
-  }
-`;
-
-const HeaderRow = styled.div`
-  display: none;
-
-  @media (min-width: 768px) {
-    display: flex;
-    padding: 0rem 1rem;
-    width: 100%;
-    justify-content: space-between;
-    align-items: center;
-
-    font-weight: bold;
-    font-size: 11px;
-    text-transform: uppercase;
-    color: navy;
-    font-style: normal;
-  }
-`;
-
-const HeaderTitle = styled.h4`
-  width: 25%;
-  cursor: pointer;
-  margin-left: 30px;
-`;
-
-const VideoTitle = styled.h4`
-  font-weight: 500;
-  margin: 5px 0px;
-
-  @media (min-width: 768px) {
-    width: 25%;
-  }
-`;
-
-const HeaderCategory = styled.span`
-  width: 15%;
-  cursor: pointer;
-`;
-
-const Category = styled.span`
-  font-weight: 400;
-  text-transform: uppercase;
-  font-size: 0.875rem;
-  color: #6b7280;
-
-  @media (min-width: 768px) {
-    width: 15%;
-  }
-`;
-
-const HeaderDescription = styled.span`
-  width: 30%;
-`;
-
-const Description = styled.span`
-  font-style: italic;
-  margin: 5px 0px;
-  font-size: 0.875rem;
-  color: #6b7280;
-
-  @media (min-width: 768px) {
-    width: 30%;
-    margin: 0px;
-  }
-`;
-
-const ThumbnailContainer = styled.div`
-  position: relative;
-  width: 100px;
-  height: 160px;
-  overflow: hidden;
-`;
-
-const Thumbnail = styled.img`
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-`;
-
-const HeaderCreatedDate = styled.span`
-  width: 10%;
-  cursor: pointer;
-`;
-
-const CreatedDate = styled.span`
-  color: #6b7280;
-  margin: 5px 0px;
-  color: #6b7280;
-
-  @media (min-width: 768px) {
-    width: 10%;
-    margin: 0px;
-  }
-`;
-
-const HeaderTags = styled.div`
-  width: 20%;
-  display: flex;
-  justify-content: right;
-`;
-
-const Tags = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
-  margin: 5px 0px;
-
-  @media (min-width: 768px) {
-    width: 20%;
-    justify-content: right;
-  }
-`;
-
-const Tag = styled.span`
-  background-color: navy;
-  padding: 0.15rem 0.375rem;
-  border-radius: 0.25rem;
-  font-size: 0.75rem;
-  color: white;
-`;
 const EmptyMessage = styled.div`
   text-align: center;
   color: #6b7280;
@@ -236,11 +100,11 @@ const VideoList: React.FC = () => {
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
   const [sortBy, setSortBy] = useState("");
   const [sortDirection, setSortDirection] = useState("desc");
-  const [selectedVideos, setSelectedVideos] = useState<Video[]>([]);
+  const [selectedVideoIds, setSelectedVideoIds] = useState<string[]>([]);
 
   const { data, error, isLoading, isFetching } = useGetVideosQuery({
     pageToken,
-    limit: 10,
+    limit: 20,
     search: searchTerm,
     category: selectedCategory,
     tags: selectedTags,
@@ -272,6 +136,9 @@ const VideoList: React.FC = () => {
     return `${day}.${month}.${year}`;
   };
 
+  const changeSortDirection = () =>
+    setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+
   useEffect(() => {
     setPageToken(undefined);
   }, [searchTerm, selectedCategory, selectedTags, sortBy, sortDirection]);
@@ -297,7 +164,7 @@ const VideoList: React.FC = () => {
               !data?.videos.find((video) => video.id === selectedVideo.id)
                 ?.metadata) ? (
               <VideoMetadataForm
-                key={selectedVideo.id}
+                key={`form${selectedVideo.id}`}
                 videoId={selectedVideo.id}
                 categories={categoriesData?.categories ?? []}
                 metadata={
@@ -332,94 +199,44 @@ const VideoList: React.FC = () => {
             availableTags={tagsData?.tags ?? []}
           />
           <ActionsDropdown
-            selectedVideos={selectedVideos}
+            selectedVideoIds={selectedVideoIds}
             categories={categoriesData?.categories ?? []}
             availableTags={tagsData?.tags ?? []}
-            deselectVideos={() => setSelectedVideos([])}
+            deselectVideos={() => setSelectedVideoIds([])}
+            isNew={(id: string) =>
+              data?.videos.find((video) => video.id === id)?.metadata
+                ? false
+                : true
+            }
           />
         </ActionsRow>
-        <HeaderRow>
-          <HeaderTitle
-            onClick={() => {
-              setSortBy("title");
-              setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
-            }}
-          >
-            Title
-          </HeaderTitle>
-          <HeaderCategory
-            onClick={() => {
-              setSortBy("category");
-              setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
-            }}
-          >
-            Category
-          </HeaderCategory>
-          <HeaderDescription>Description</HeaderDescription>
-          <HeaderCreatedDate
-            onClick={() => {
-              setSortBy("createdDate");
-              setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
-            }}
-          >
-            Created date
-          </HeaderCreatedDate>
-          <HeaderTags>Tags</HeaderTags>
-        </HeaderRow>
-        {data?.videos?.map((video) => (
-          <VideoCard
-            key={video.id}
-            onClick={() => {
-              setIsEditMode(false);
-              setSelectedVideo(video);
-            }}
-            selected={video === selectedVideo}
-          >
-            <Checkbox
-              onClick={(e) => {
-                const newSelecteds = selectedVideos.includes(video)
-                  ? selectedVideos.filter((vid) => vid !== video)
-                  : selectedVideos.concat(video);
-                setSelectedVideos(newSelecteds);
-                e.stopPropagation();
-              }}
-              defaultChecked={selectedVideos.includes(video) ? true : false}
-            />
-            <ThumbnailContainer>
-              {video.thumbnailUrl ? (
-                <Thumbnail
-                  src={video.thumbnailUrl}
-                  alt={video.metadata?.title || "Video thumbnail"}
-                />
-              ) : (
-                <div>
-                  <img src="/hang.svg" />
-                </div>
-              )}
-            </ThumbnailContainer>
-            <VideoTitle>
-              {video.metadata?.title || formatFileName(video.id)}
-            </VideoTitle>
-            <Category>{video.metadata?.category || ""}</Category>
-            <Description>{video.metadata?.description || ""}</Description>
-            <CreatedDate>
-              {video.metadata.createdDate
-                ? formatDate(video.metadata.createdDate)
-                : ""}
-            </CreatedDate>
-            {video.metadata?.tags && video.metadata.tags.length > 0 && (
-              <Tags>
-                {video.metadata.tags.map((tag) => (
-                  <Tag key={tag}>{tag}</Tag>
-                ))}
-              </Tags>
-            )}
-          </VideoCard>
-        ))}
+        {/* <ListView
+          videos={data?.videos || []}
+          selectVideo={setSelectedVideo}
+          selectedVideo={selectedVideo}
+          sortBy={setSortBy}
+          order={changeSortDirection}
+          selectedVideoIds={selectedVideoIds}
+          selectVideoIds={setSelectedVideoIds}
+          formatDate={formatDate}
+          formatFileName={formatFileName}
+        /> */}
+
+        <CardView
+          videos={data?.videos || []}
+          selectVideo={setSelectedVideo}
+          selectedVideo={selectedVideo}
+          sortBy={setSortBy}
+          order={changeSortDirection}
+          selectedVideoIds={selectedVideoIds}
+          selectVideoIds={setSelectedVideoIds}
+          formatDate={formatDate}
+          formatFileName={formatFileName}
+        />
         {data?.nextPageToken && (
-          <button onClick={handleLoadMore} disabled={isFetching}>
-            {isFetching ? "Loading" : "Load More"}
-          </button>
+          <Button onClick={handleLoadMore} disabled={isFetching}>
+            {isFetching ? "Loading" : "Next page"}
+          </Button>
         )}
       </FlexContainer>
 

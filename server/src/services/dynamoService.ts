@@ -348,7 +348,7 @@ export class DynamoService {
         : null;
 
     return {
-      videos: sorted,
+      videos: paginatedResults,
       nextPageToken,
       count: filteredResults.length,
     };

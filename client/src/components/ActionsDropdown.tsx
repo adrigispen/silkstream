@@ -6,7 +6,6 @@ import {
 } from "../services/api";
 import toast from "react-hot-toast";
 import Select, { MultiValue, SingleValue } from "react-select";
-import { Video } from "../types/video";
 
 const ActionsDiv = styled.div`
   display: flex;
@@ -124,17 +123,19 @@ interface Option {
 }
 
 interface ActionsDropdownProps {
-  selectedVideos: Video[];
+  selectedVideoIds: string[];
   deselectVideos: () => void;
   categories: string[];
   availableTags: string[];
+  isNew: (id: string) => boolean;
 }
 
 const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
-  selectedVideos,
+  selectedVideoIds,
   deselectVideos,
   categories,
   availableTags,
+  isNew,
 }) => {
   const [batchDelete] = useBatchDeleteVideosMutation();
   const [batchUpsert] = useBatchUpsertMetadataMutation();
@@ -155,22 +156,21 @@ const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
   };
 
   const handleBatchUpdate = async (
-    videos: Video[],
+    videoIds: string[],
     category?: string,
     tags?: string[]
   ) => {
-    const updates = [...videos].map((video) => {
+    const updates = [...videoIds].map((id) => {
       const metadata = {
-        uploadDate: video.lastModified,
         category: category ?? undefined,
         tags: tags ?? undefined,
-        originalFileName: video.key,
-        s3Key: video.key,
+        originalFileName: id,
+        s3Key: id,
       };
       return {
-        videoId: video.id,
+        videoId: id,
         metadata,
-        isNew: video.metadata ? false : true,
+        isNew: isNew(id) ? true : false,
       };
     });
 
@@ -189,7 +189,7 @@ const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
 
   return (
     <ActionsDiv>
-      {selectedVideos.length > 0 && (
+      {selectedVideoIds.length > 0 && (
         <ActionsButton
           onClick={() => {
             setShowActions(showActions ? false : true);
@@ -199,13 +199,9 @@ const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
           Actions
         </ActionsButton>
       )}
-      {selectedVideos.length > 0 && (
+      {selectedVideoIds.length > 0 && (
         <ActionsPanel showPanel={showActions}>
-          <ActionsSubButton
-            onClick={() =>
-              handleBatchDelete(selectedVideos.map((video: Video) => video.id))
-            }
-          >
+          <ActionsSubButton onClick={() => handleBatchDelete(selectedVideoIds)}>
             Delete videos
           </ActionsSubButton>
           <ActionsSubButton onClick={() => setShowBulkUpdate(true)}>
@@ -213,7 +209,7 @@ const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
           </ActionsSubButton>
         </ActionsPanel>
       )}
-      {selectedVideos.length > 0 && (
+      {selectedVideoIds.length > 0 && (
         <BulkUpdateModal showModal={showBulkUpdate}>
           <FlexContainer>
             <CategorySelect
@@ -269,13 +265,13 @@ const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
               <ActionsButton
                 onClick={() =>
                   handleBatchUpdate(
-                    selectedVideos,
+                    selectedVideoIds,
                     selectedCategory,
                     selectedTags
                   )
                 }
               >
-                {`Save ${selectedVideos.length} videos`}
+                {`Save ${selectedVideoIds.length} videos`}
               </ActionsButton>
             </ButtonPane>
           </FlexContainer>

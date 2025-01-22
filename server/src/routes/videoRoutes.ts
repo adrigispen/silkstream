@@ -10,6 +10,7 @@ export function createVideoRouter(awsServices: AwsServices) {
 
   router.post("/get-upload-url", videoController.getUploadUrl);
   router.get("/videos", videoController.listVideos);
+  router.get("/videos/:videoId", videoController.getVideoById);
 
   router.post("/videos/:videoId/metadata", metadataController.saveMetadata);
   router.get("/videos/:videoId/metadata", metadataController.getMetadata);

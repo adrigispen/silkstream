@@ -5,6 +5,8 @@ import { Toaster } from "react-hot-toast";
 import { Provider } from "react-redux";
 import { store } from "./store";
 import { PasswordGate } from "./components/PasswordGate";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import SingleVideoView from "./components/SingleVideoView";
 
 const AppContainer = styled.div`
   min-height: 100vh;
@@ -50,19 +52,24 @@ function App() {
   return (
     <Provider store={store}>
       <PasswordGate>
-        <AppContainer>
-          <Toaster position="top-right" />
-          <Header>
-            <HeaderContent>
-              <Image src="/hang.svg" />
-              <HeaderTitle>SilkStream</HeaderTitle>
-              <VideoUpload />
-            </HeaderContent>
-          </Header>
-          <Main>
-            <VideoList />
-          </Main>
-        </AppContainer>
+        <BrowserRouter>
+          <AppContainer>
+            <Toaster position="top-right" />
+            <Header>
+              <HeaderContent>
+                <Image src="/hang.svg" />
+                <HeaderTitle>SilkStream</HeaderTitle>
+                <VideoUpload />
+              </HeaderContent>
+            </Header>
+            <Main>
+              <Routes>
+                <Route path="/" element={<VideoList />} />
+                <Route path="/videos/:videoId" element={<SingleVideoView />} />
+              </Routes>
+            </Main>
+          </AppContainer>
+        </BrowserRouter>
       </PasswordGate>
     </Provider>
   );
