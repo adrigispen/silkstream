@@ -437,4 +437,22 @@ export class DynamoService {
       throw error;
     }
   }
+
+  async isFavorited(videoId: string): Promise<boolean> {
+    try {
+      const result = await this.services.docClient.send(
+        new GetCommand({
+          TableName: "silkstream-favorites",
+          Key: {
+            videoId,
+          },
+        })
+      );
+
+      return !!result.Item;
+    } catch (error) {
+      console.error("Error checking favorite status:", error);
+      throw error;
+    }
+  }
 }

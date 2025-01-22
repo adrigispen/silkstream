@@ -3,11 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import styled from "styled-components";
 import VideoPlayer from "./VideoPlayer";
 import VideoDetails from "./VideoDetails";
-import {
-  useGetCategoriesQuery,
-  useGetVideoByIdQuery,
-  useToggleFavoriteMutation,
-} from "../services/api";
+import { useGetCategoriesQuery, useGetVideoByIdQuery } from "../services/api";
 import VideoMetadataForm from "./VideoMetadataForm";
 
 const Container = styled.div`
@@ -47,16 +43,6 @@ const SingleVideoView: React.FC = () => {
 
   const { data: categoriesData } = useGetCategoriesQuery();
 
-  const [toggleFavorite] = useToggleFavoriteMutation();
-
-  const handleFavoriteClick = async () => {
-    try {
-      await toggleFavorite(videoId || "");
-    } catch (error) {
-      console.error("Failed to toggle favorite:", error);
-    }
-  };
-
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
 
   if (isLoading) return <div>Loading...</div>;
@@ -64,7 +50,7 @@ const SingleVideoView: React.FC = () => {
 
   return (
     <Container>
-      <BackLink to="/">← Back to all videos</BackLink>
+      <BackLink to="/">← Back to home</BackLink>
       <FlexContainer>
         <div>
           <VideoPlayer url={video.url} />
@@ -85,7 +71,6 @@ const SingleVideoView: React.FC = () => {
           />
         )}
       </FlexContainer>
-      <button onClick={handleFavoriteClick}>Favorite</button>
     </Container>
   );
 };

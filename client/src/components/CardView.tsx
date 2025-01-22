@@ -18,7 +18,8 @@ const VideoCard = styled.div`
   justify-content: space-between;
   padding: 1rem;
   cursor: pointer;
-  max-width: 35%;
+  max-width: 45%;
+  min-width: 200px;
   flex-basis: 20%;
   flex-grow: 1;
   transition: background-color 0.2s;
@@ -148,7 +149,11 @@ const CardView: React.FC<VideosViewProps> = ({
           {video.metadata?.title || formatFileName(video.id)}
         </VideoTitle>
         <Category>{video.metadata?.category || ""}</Category>
-        <Description>{video.metadata?.description || ""}</Description>
+        <Description>
+          {video.metadata?.description
+            ? `${video.metadata?.description?.slice(0, 20)}...`
+            : ""}
+        </Description>
         <CreatedDate>
           {video.metadata?.createdDate
             ? formatDate(video.metadata.createdDate)

@@ -1,5 +1,9 @@
 import React from "react";
 import styled from "styled-components";
+import {
+  useCheckFavoriteQuery,
+  useToggleFavoriteMutation,
+} from "../services/api";
 
 const Container = styled.div`
   display: flex;
@@ -61,6 +65,12 @@ const EditButton = styled.button`
   }
 `;
 
+const Favorite = styled.img`
+  height: 30px;
+  width: 30px;
+  cursor: pointer;
+`;
+
 interface VideoDetailsProps {
   editDetails: () => void;
   metadata?: {
@@ -68,6 +78,7 @@ interface VideoDetailsProps {
     description?: string;
     tags?: string[];
     category?: string;
+    id: string;
   };
 }
 
@@ -75,6 +86,26 @@ const VideoDetails: React.FC<VideoDetailsProps> = ({
   metadata,
   editDetails,
 }) => {
+  const { data: favStatus } = useCheckFavoriteQuery(metadata?.id ?? "");
+
+  const imageSource = favStatus?.isFavorited
+    ? "/lilHeartFilled.svg"
+    : "/lilHeartOutline.svg";
+
+  const titleText = favStatus?.isFavorited
+    ? "Remove from favorites"
+    : "Add to favorites";
+
+  const [toggleFavorite] = useToggleFavoriteMutation();
+
+  const handleFavoriteClick = async () => {
+    try {
+      await toggleFavorite(metadata?.id || "");
+    } catch (error) {
+      console.error("Failed to toggle favorite:", error);
+    }
+  };
+
   return (
     <Container>
       <Title>{metadata?.title}</Title>
@@ -85,6 +116,11 @@ const VideoDetails: React.FC<VideoDetailsProps> = ({
           <Tag key={i}>{tag}</Tag>
         ))}
       </TagList>
+      <Favorite
+        src={imageSource}
+        title={titleText}
+        onClick={handleFavoriteClick}
+      />
       <EditButton onClick={editDetails}>Edit details</EditButton>
     </Container>
   );

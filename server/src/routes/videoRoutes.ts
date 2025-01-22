@@ -30,6 +30,7 @@ export function createVideoRouter(awsServices: AwsServices) {
 
   router.post("/videos/:videoId/favorite", videoController.toggleFavorite);
   router.get("/videos/random-favorites", videoController.getRandomFavorites);
+  router.get("/videos/:videoId/is-favorite", videoController.checkFavorite);
 
   return router;
 }

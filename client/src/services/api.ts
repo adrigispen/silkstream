@@ -109,6 +109,15 @@ export const api = createApi({
         { type: "Videos", id: videoId },
       ],
     }),
+    checkFavorite: builder.query<{ isFavorited: boolean }, string>({
+      query: (videoId) => ({
+        url: `videos/${encodeURIComponent(videoId)}/is-favorite`,
+        method: "GET",
+      }),
+      providesTags: (_result, _error, videoId) => [
+        { type: "Favorites", id: videoId },
+      ],
+    }),
     getVideoMetadata: builder.query<VideoMetadata, string>({
       query: (videoId) => `videos/${videoId}/metadata`,
       providesTags: (_result, _error, videoId) => [
@@ -222,4 +231,5 @@ export const {
   useToggleFavoriteMutation,
   useGetRandomFavoritesQuery,
   useGetAllVideosQuery,
+  useCheckFavoriteQuery,
 } = api;

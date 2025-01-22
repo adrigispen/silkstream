@@ -259,4 +259,15 @@ export class VideoController {
       return res.status(500).json({ error: "Failed to get random favorites" });
     }
   };
+
+  checkFavorite = async (req: Request, res: Response): Promise<any> => {
+    try {
+      const videoId = req.params.videoId;
+      const isFavorited = await this.dynamoService.isFavorited(videoId);
+      return res.json({ isFavorited });
+    } catch (error) {
+      console.error("Error checking favorite status:", error);
+      return res.status(500).json({ error: "Failed to check favorite status" });
+    }
+  };
 }
