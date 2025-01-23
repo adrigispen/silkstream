@@ -1,7 +1,13 @@
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import { useGetAllVideosQuery } from "../services/api";
+import {
+  useGetAllVideosQuery,
+  useGetCategoriesQuery,
+  useGetTagsQuery,
+} from "../services/api";
 import ListView from "./ListView";
+import VideoFilters from "./VideoFilters";
+import ActionsDropdown from "./ActionsDropdown";
 
 const Button = styled.button`
   align-self: center;
@@ -46,9 +52,16 @@ const FlexContainer = styled.div`
   justify-content: center;
   gap: 1rem;
   width: 100%;
-  @media (min-width: 768px) {
-    gap: 1rem;
-  }
+`;
+
+const ActionsRow = styled.div`
+  margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  width: 100%;
+  align-items: center;
 `;
 
 const EmptyMessage = styled.div`
@@ -62,13 +75,23 @@ const VideoList: React.FC = () => {
   const [sortBy, setSortBy] = useState("");
   const [sortDirection, setSortDirection] = useState("desc");
   const [selectedVideoIds, setSelectedVideoIds] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   const { data, error, isLoading, isFetching } = useGetAllVideosQuery({
     pageToken,
     limit: 40,
     sortBy: sortBy,
     sortDirection,
+    search: searchTerm,
+    category: selectedCategory,
+    tags: selectedTags,
   });
+
+  const { data: tagsData } = useGetTagsQuery();
+
+  const { data: categoriesData } = useGetCategoriesQuery();
 
   const handleLoadMore = () => {
     if (data?.nextPageToken && !isFetching) {
@@ -101,6 +124,25 @@ const VideoList: React.FC = () => {
   return (
     <Container>
       <FlexContainer>
+        <ActionsRow>
+          <VideoFilters
+            search={searchTerm}
+            onSearchChange={setSearchTerm}
+            category={selectedCategory}
+            onCategoryChange={setSelectedCategory}
+            selectedTags={selectedTags}
+            onTagsChange={setSelectedTags}
+            categories={categoriesData?.categories ?? []}
+            availableTags={tagsData?.tags ?? []}
+          />
+          <ActionsDropdown
+            selectedVideoIds={selectedVideoIds}
+            categories={categoriesData?.categories ?? []}
+            availableTags={tagsData?.tags ?? []}
+            deselectVideos={() => setSelectedVideoIds([])}
+            isNew={() => false}
+          />
+        </ActionsRow>
         <ListView
           metadata={data?.metadata || []}
           sortBy={setSortBy}
@@ -118,7 +160,7 @@ const VideoList: React.FC = () => {
       </FlexContainer>
 
       {data?.metadata?.length === 0 && (
-        <EmptyMessage>No videos uploaded yet</EmptyMessage>
+        <EmptyMessage>No videos in the archive</EmptyMessage>
       )}
     </Container>
   );

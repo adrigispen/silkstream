@@ -3,10 +3,10 @@ import styled from "styled-components";
 import Select, { SingleValue, MultiValue } from "react-select";
 
 const FiltersContainer = styled.div`
-  margin: 1rem 0 1rem 1rem;
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
+  flex-grow: 1;
   justify-content: flex-end;
 `;
 
@@ -14,19 +14,21 @@ const SearchInput = styled.input`
   padding: 0.5rem;
   border: 1px solid rgb(204, 204, 204);
   border-radius: 4px;
-  min-width: 180px;
+  flex-grow: 2;
 `;
 
 const CategorySelect = styled(Select<Option>)`
-  min-width: 180px;
+  min-width: 100px;
   font-family: sans-serif;
   font-size: 13px;
+  flex-grow: 1;
 `;
 
 const TagsSelect = styled(Select<Option, true>)`
-  min-width: 180px;
+  min-width: 100px;
   font-family: sans-serif;
   font-size: 13px;
+  flex-grow: 1;
 `;
 
 interface Option {
@@ -59,13 +61,13 @@ const VideoFilters: React.FC<VideoFiltersProps> = ({
     <FiltersContainer>
       <SearchInput
         type="text"
-        placeholder="Search videos..."
+        placeholder="Search all videos..."
         value={search}
         onChange={(e) => onSearchChange(e.target.value)}
       />
 
       <CategorySelect
-        placeholder="Filter by category"
+        placeholder="Find by category"
         value={category ? { value: category, label: category } : null}
         options={[
           { value: "", label: "All categories" },
@@ -82,7 +84,7 @@ const VideoFilters: React.FC<VideoFiltersProps> = ({
       <TagsSelect
         isMulti
         isClearable
-        placeholder="Filter by tag"
+        placeholder="Find by tag"
         value={selectedTags.map((tag) => ({
           value: tag,
           label: tag,

@@ -124,6 +124,12 @@ Resources:
             RestApiId: !Ref SilkStreamApi
             Path: /videos/{videoId}/is-favorite
             Method: GET
+        GetUntaggedVideos:
+          Type: Api
+          Properties:
+            RestApiId: !Ref SilkStreamApi
+            Path: /videos-untagged
+            Method: GET
       Policies:
         - S3CrudPolicy:
             BucketName: silkstream-vids

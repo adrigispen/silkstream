@@ -4,6 +4,7 @@ import {
   UpdateCommand,
   QueryCommand,
   DeleteCommand,
+  BatchGetCommand,
 } from "@aws-sdk/lib-dynamodb";
 import type { AwsServices } from "../config/aws";
 import { VideoMetadata, VideoQueryParams } from "../types/video";
@@ -454,5 +455,35 @@ export class DynamoService {
       console.error("Error checking favorite status:", error);
       throw error;
     }
+  }
+
+  async filterOutTaggedVideos(s3Objects: any[]) {
+    const s3Keys = s3Objects.map((obj) => obj.Key);
+    const orphanedVideos: string[] = [];
+    const batchSize = 100;
+
+    for (let i = 0; i < s3Keys.length; i += batchSize) {
+      const batch = s3Keys.slice(i, i + batchSize);
+      const batchGetCommand = new BatchGetCommand({
+        RequestItems: {
+          "silkstream-vids": {
+            Keys: batch.map((key) => ({ id: key })),
+          },
+        },
+      });
+
+      const result = await this.services.docClient.send(batchGetCommand);
+      const foundKeys = new Set(
+        result.Responses?.["silkstream-vids"]?.map((item) => item.id) || []
+      );
+
+      batch.forEach((key) => {
+        if (!foundKeys.has(key)) {
+          orphanedVideos.push(key);
+        }
+      });
+    }
+
+    return orphanedVideos;
   }
 }

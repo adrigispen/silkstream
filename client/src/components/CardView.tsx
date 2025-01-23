@@ -15,12 +15,9 @@ const VideoCard = styled.div`
   border-radius: 0.5rem;
   display: flex;
   align-items: flex-start;
-  justify-content: space-between;
   padding: 1rem;
   cursor: pointer;
-  max-width: 45%;
-  min-width: 200px;
-  flex-basis: 20%;
+  flex-basis: 200px;
   flex-grow: 1;
   transition: background-color 0.2s;
   gap: 1rem;
@@ -28,12 +25,15 @@ const VideoCard = styled.div`
   &:hover {
     background-color: rgb(255, 247, 228);
   }
+
+  @media (min-width: 768px) {
+    flex-basis: 240px;
+  }
 `;
 
 const MetadataContainer = styled.div`
   display: flex;
   flex-direction: column;
-  max-width: 60%;
 `;
 
 const Checkbox = styled.input.attrs({ type: "checkbox" })`
@@ -63,9 +63,14 @@ const Description = styled.span`
 
 const ThumbnailContainer = styled.div`
   position: relative;
-  width: 110px;
-  height: 190px;
+  width: 80px;
+  height: 150px;
   overflow: hidden;
+
+  @media (min-width: 768px) {
+    width: 110px;
+    height: 190px;
+  }
 `;
 
 const Thumbnail = styled.img`
@@ -151,7 +156,7 @@ const CardView: React.FC<VideosViewProps> = ({
         <Category>{video.metadata?.category || ""}</Category>
         <Description>
           {video.metadata?.description
-            ? `${video.metadata?.description?.slice(0, 20)}...`
+            ? `${video.metadata?.description?.slice(0, 30)}...`
             : ""}
         </Description>
         <CreatedDate>

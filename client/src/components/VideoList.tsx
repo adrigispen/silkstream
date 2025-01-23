@@ -6,6 +6,7 @@ import {
   useGetVideosQuery,
   useGetTagsQuery,
   useGetCategoriesQuery,
+  useGetUntaggedVideosQuery,
 } from "../services/api";
 import { Video } from "../types/video";
 import VideoDetails from "./VideoDetails";
@@ -57,12 +58,10 @@ const FlexContainer = styled.div`
   justify-content: center;
   gap: 1rem;
   width: 100%;
-  @media (min-width: 768px) {
-    gap: 1rem;
-  }
 `;
 
 const ActionsRow = styled.div`
+  margin-top: 1rem;
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
@@ -110,6 +109,8 @@ const VideoList: React.FC = () => {
     sortBy: sortBy,
     sortDirection,
   });
+
+  const { data: untaggedData } = useGetUntaggedVideosQuery();
 
   const { data: tagsData } = useGetTagsQuery();
 
@@ -186,6 +187,17 @@ const VideoList: React.FC = () => {
         )}
       </Modal>
       <FlexContainer>
+        {untaggedData?.videos && (
+          <CardView
+            videos={untaggedData?.videos}
+            selectVideo={setSelectedVideo}
+            selectedVideo={selectedVideo}
+            selectedVideoIds={selectedVideoIds}
+            selectVideoIds={setSelectedVideoIds}
+            formatDate={formatDate}
+            formatFileName={formatFileName}
+          />
+        )}
         <ActionsRow>
           <VideoFilters
             search={searchTerm}

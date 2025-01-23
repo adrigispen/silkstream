@@ -148,51 +148,77 @@ export class VideoController {
         sortDirection = "desc",
         pageToken,
         limit = 20,
+        tags,
+        category,
+        search,
       } = req.query;
-      const response = await this.dynamoService.getAllVideos();
-      let sorted;
-      if (sortBy && sortBy !== "uploadDate") {
-        sorted = [...response].sort((a, b) => {
-          let aVal: string, bVal: string;
-          switch (sortBy) {
-            case "title":
-              aVal = a.title || "";
-              bVal = b.title || "";
-              break;
-            case "category":
-              aVal = a.category || "";
-              bVal = b.category || "";
-              break;
-            default:
-              return 0;
-          }
-          return sortDirection === "desc"
-            ? aVal.toLowerCase().localeCompare(bVal.toLowerCase())
-            : bVal.toLowerCase().localeCompare(aVal.toLowerCase());
+
+      const hasFilters = search || category || tags;
+
+      if (!hasFilters) {
+        const response = await this.dynamoService.getAllVideos();
+        let sorted;
+        if (sortBy && sortBy !== "createdDate") {
+          sorted = [...response].sort((a, b) => {
+            let aVal: string, bVal: string;
+            switch (sortBy) {
+              case "title":
+                aVal = a.title || "";
+                bVal = b.title || "";
+                break;
+              case "category":
+                aVal = a.category || "";
+                bVal = b.category || "";
+                break;
+              default:
+                return 0;
+            }
+            return sortDirection === "desc"
+              ? aVal.toLowerCase().localeCompare(bVal.toLowerCase())
+              : bVal.toLowerCase().localeCompare(aVal.toLowerCase());
+          });
+        } else {
+          sorted = [...response].sort((a, b) => {
+            if (!a.createdDate) return -1;
+            if (!b.createdDate) return 1;
+            return sortDirection === "desc"
+              ? new Date(b.createdDate || "").getTime() -
+                  new Date(a.createdDate || "").getTime()
+              : new Date(a.createdDate || "").getTime() -
+                  new Date(b.createdDate || "").getTime();
+          });
+        }
+        const pageSize = parseInt(limit as string) || 20;
+        const startIndex = pageToken
+          ? parseInt(pageToken as string) * pageSize
+          : 0;
+        const endIndex = startIndex + pageSize;
+        const paginatedMetadata = sorted.slice(startIndex, endIndex);
+        return res.json({
+          metadata: paginatedMetadata,
+          totalCount: response.length,
+          nextPageToken:
+            endIndex < response.length
+              ? String(startIndex / pageSize + 1)
+              : null,
         });
       } else {
-        sorted = [...response].sort((a, b) => {
-          if (!a.createdDate) return -1;
-          if (!b.createdDate) return 1;
-          return sortDirection === "desc"
-            ? new Date(b.createdDate || "").getTime() -
-                new Date(a.createdDate || "").getTime()
-            : new Date(a.createdDate || "").getTime() -
-                new Date(b.createdDate || "").getTime();
+        const dbResult = await this.dynamoService.queryVideos({
+          search: search as string,
+          sortBy: sortBy as any,
+          sortDirection: sortDirection as "asc" | "desc",
+          tags: tags ? (tags as string).split(",") : undefined,
+          category: category as string,
+          pageToken: pageToken as string,
+          limit: limit ? parseInt(limit as string) : undefined,
+        });
+
+        return res.json({
+          metadata: dbResult.videos,
+          totalCount: dbResult.count,
+          nextPageToken: dbResult.nextPageToken,
         });
       }
-      const pageSize = parseInt(limit as string) || 20;
-      const startIndex = pageToken
-        ? parseInt(pageToken as string) * pageSize
-        : 0;
-      const endIndex = startIndex + pageSize;
-      const paginatedMetadata = sorted.slice(startIndex, endIndex);
-      return res.json({
-        metadata: paginatedMetadata,
-        totalCount: response.length,
-        nextPageToken:
-          endIndex < response.length ? String(startIndex / pageSize + 1) : null,
-      });
     } catch (error) {
       console.error("Error listing videos:", error);
       res.status(500).json({ error: "Failed to list videos" });
@@ -268,6 +294,33 @@ export class VideoController {
     } catch (error) {
       console.error("Error checking favorite status:", error);
       return res.status(500).json({ error: "Failed to check favorite status" });
+    }
+  };
+
+  getUntaggedVideos = async (req: Request, res: Response): Promise<any> => {
+    try {
+      const response = await this.s3Service.listS3Objects();
+      if (!response.Contents) {
+        return res.json({ videos: [] });
+      }
+
+      const orphanedVideos = await this.dynamoService.filterOutTaggedVideos(
+        response.Contents
+      );
+
+      // Get signed URLs for each orphaned video
+      const videosWithUrls = await Promise.all(
+        orphanedVideos.map(async (key) => ({
+          key,
+          id: key,
+          url: await this.s3Service.getSignedDownloadUrl(key),
+        }))
+      );
+
+      return res.json({ videos: videosWithUrls });
+    } catch (error) {
+      console.error("Error getting untagged videos:", error);
+      return res.status(500).json({ error: "Failed to get untagged videos" });
     }
   };
 }

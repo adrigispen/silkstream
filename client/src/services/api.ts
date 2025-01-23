@@ -69,6 +69,9 @@ export const api = createApi({
         limit?: number;
         sortBy?: string;
         sortDirection?: string;
+        search?: string;
+        category?: string;
+        tags?: string[];
       }
     >({
       query: (params = {}) => ({
@@ -102,6 +105,12 @@ export const api = createApi({
           JSON.stringify(currentFilters) !== JSON.stringify(previousFilters)
         );
       },
+    }),
+    getUntaggedVideos: builder.query<{ videos: Video[] }, void>({
+      query: () => ({
+        url: "videos-untagged",
+      }),
+      providesTags: ["Videos"],
     }),
     getVideoById: builder.query<Video, string>({
       query: (id) => `videos/${encodeURIComponent(id)}`,
@@ -232,4 +241,5 @@ export const {
   useGetRandomFavoritesQuery,
   useGetAllVideosQuery,
   useCheckFavoriteQuery,
+  useGetUntaggedVideosQuery,
 } = api;

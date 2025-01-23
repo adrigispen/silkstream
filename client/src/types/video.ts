@@ -61,8 +61,8 @@ export interface VideosViewProps {
   videos: Video[];
   selectVideo: (video: Video) => void;
   selectedVideo: Video | null;
-  sortBy: (property: string) => void;
-  order: () => void;
+  sortBy?: (property: string) => void;
+  order?: () => void;
   selectedVideoIds: string[];
   selectVideoIds: (ids: string[]) => void;
   formatDate: (date: string) => string;

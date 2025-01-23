@@ -5,13 +5,11 @@ import styled from "styled-components";
 const Container = styled.div`
   display: flex;
   flex-direction: column;
-  width: 100%;
 `;
 
 const VideosList = styled.div`
   display: flex;
   flex-direction: column;
-  width: 100%;
 `;
 
 const VideoRow = styled.div`
@@ -23,7 +21,6 @@ const VideoRow = styled.div`
   justify-content: space-between;
   padding: 1rem;
   cursor: pointer;
-  width: 100%;
   transition: background-color 0.2s;
   gap: 1rem;
 
@@ -41,7 +38,6 @@ const Checkbox = styled.input.attrs({ type: "checkbox" })`
 const HeaderRow = styled.div`
   display: flex;
   padding: 0rem 1rem;
-  width: 100%;
   justify-content: space-between;
   align-items: center;
 
