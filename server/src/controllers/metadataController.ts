@@ -67,6 +67,7 @@ export class MetadataController {
           thumbnailKey: thumbnailData.thumbnailKey,
           createdDate: thumbnailData.createdDate?.toISOString(),
           duration: thumbnailData.duration,
+          uploadDate: new Date().toISOString(),
         };
 
         await this.dynamoService.updateMetadata(videoId, fullUpdates);
@@ -129,11 +130,6 @@ export class MetadataController {
               id: update.videoId,
               ...update.metadata,
             });
-            // Index in search
-            // await this.searchService.indexVideo(
-            //   update.videoId,
-            //   update.metadata
-            // );
           } else {
             const existingData = await this.dynamoService.getMetadata(
               update.videoId
@@ -157,11 +153,6 @@ export class MetadataController {
               update.videoId,
               fullUpdates
             );
-            // Update search index
-            // await this.searchService.indexVideo(
-            //   update.videoId,
-            //   update.metadata
-            // );
           }
         })
       );

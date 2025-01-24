@@ -12,6 +12,7 @@ export function createVideoRouter(awsServices: AwsServices) {
   router.get("/videos", videoController.listVideos);
   router.get("/videos-archive", videoController.listAllVideos);
   router.get("/videos-untagged", videoController.getUntaggedVideos);
+  router.get("/videos-just-tagged", videoController.getRecentlyTaggedVideos);
   router.get("/videos/:videoId", videoController.getVideoById);
 
   router.post("/videos/:videoId/metadata", metadataController.saveMetadata);

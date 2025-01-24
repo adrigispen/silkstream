@@ -112,6 +112,12 @@ export const api = createApi({
       }),
       providesTags: ["Videos"],
     }),
+    getRecentlyTaggedVideos: builder.query<{ videos: Video[] }, void>({
+      query: () => ({
+        url: "videos-just-tagged",
+      }),
+      providesTags: ["Videos"],
+    }),
     getVideoById: builder.query<Video, string>({
       query: (id) => `videos/${encodeURIComponent(id)}`,
       providesTags: (_result, _error, videoId) => [
@@ -242,4 +248,5 @@ export const {
   useGetAllVideosQuery,
   useCheckFavoriteQuery,
   useGetUntaggedVideosQuery,
+  useGetRecentlyTaggedVideosQuery,
 } = api;

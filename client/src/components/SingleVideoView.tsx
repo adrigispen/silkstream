@@ -12,16 +12,20 @@ const Container = styled.div`
   padding: 1rem;
 `;
 
-const BackLink = styled(Link)`
+const StyledLink = styled(Link)`
   display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
+  padding: 10px 16px;
+  margin: 0 1rem 1rem 0;
+  background-color: white;
+  border-radius: 4px;
+  border: 1px solid goldenrod;
   color: darkgoldenrod;
   text-decoration: none;
-  margin-bottom: 1rem;
+  font-family: sans-serif;
+  font-size: 13px;
 
   &:hover {
-    color: goldenrod;
+    background-color: rgb(255, 247, 228);
   }
 `;
 
@@ -50,7 +54,8 @@ const SingleVideoView: React.FC = () => {
 
   return (
     <Container>
-      <BackLink to="/">← Back to home</BackLink>
+      <StyledLink to="/">← To favorites</StyledLink>
+      <StyledLink to="/videos-archive">← To video archive</StyledLink>
       <FlexContainer>
         <div>
           <VideoPlayer url={video.url} />

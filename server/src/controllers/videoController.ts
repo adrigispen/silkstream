@@ -289,6 +289,7 @@ export class VideoController {
   checkFavorite = async (req: Request, res: Response): Promise<any> => {
     try {
       const videoId = req.params.videoId;
+      console.log("in check favorite, videoId is", videoId);
       const isFavorited = await this.dynamoService.isFavorited(videoId);
       return res.json({ isFavorited });
     } catch (error) {
@@ -321,6 +322,32 @@ export class VideoController {
     } catch (error) {
       console.error("Error getting untagged videos:", error);
       return res.status(500).json({ error: "Failed to get untagged videos" });
+    }
+  };
+
+  getRecentlyTaggedVideos = async (
+    req: Request,
+    res: Response
+  ): Promise<any> => {
+    try {
+      const videoMetadata = await this.dynamoService.getRecentlyTaggedVideos();
+
+      console.log(videoMetadata);
+
+      const videosWithThumbnailsAndUrls = await Promise.all(
+        videoMetadata.map(async (data) => ({
+          key: data.s3Key,
+          id: data.id,
+          metadata: data,
+          thumbnailUrl: await this.s3Service.getSignedDownloadUrl(
+            data.thumbnailKey ?? ""
+          ),
+          url: await this.s3Service.getSignedDownloadUrl(data.s3Key),
+        }))
+      );
+      res.json({ videos: videosWithThumbnailsAndUrls });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch recently tagged videos" });
     }
   };
 }

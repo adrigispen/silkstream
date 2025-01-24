@@ -450,6 +450,7 @@ export class DynamoService {
         })
       );
 
+      console.log(!!result.Item);
       return !!result.Item;
     } catch (error) {
       console.error("Error checking favorite status:", error);
@@ -485,5 +486,23 @@ export class DynamoService {
     }
 
     return orphanedVideos;
+  }
+
+  async getRecentlyTaggedVideos(): Promise<VideoMetadata[]> {
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+
+    const command = new ScanCommand({
+      TableName: "silkstream-vids",
+      FilterExpression: "#uploadDate >= :oneHourAgo",
+      ExpressionAttributeNames: {
+        "#uploadDate": "uploadDate",
+      },
+      ExpressionAttributeValues: {
+        ":oneHourAgo": oneHourAgo,
+      },
+    });
+
+    const result = await this.services.docClient.send(command);
+    return result.Items as VideoMetadata[];
   }
 }

@@ -7,6 +7,7 @@ import {
   useGetTagsQuery,
   useGetCategoriesQuery,
   useGetUntaggedVideosQuery,
+  useGetRecentlyTaggedVideosQuery,
 } from "../services/api";
 import { Video } from "../types/video";
 import VideoDetails from "./VideoDetails";
@@ -60,6 +61,12 @@ const FlexContainer = styled.div`
   width: 100%;
 `;
 
+const Header = styled.h3`
+  color: navy;
+  width: 100%;
+  margin: 20px 0 0 0;
+`;
+
 const ActionsRow = styled.div`
   margin-top: 1rem;
   display: flex;
@@ -111,6 +118,8 @@ const VideoList: React.FC = () => {
   });
 
   const { data: untaggedData } = useGetUntaggedVideosQuery();
+
+  const { data: justTaggedData } = useGetRecentlyTaggedVideosQuery();
 
   const { data: tagsData } = useGetTagsQuery();
 
@@ -179,7 +188,10 @@ const VideoList: React.FC = () => {
                 editDetails={() => setIsEditMode(true)}
                 metadata={
                   data?.videos.find((video) => video.id === selectedVideo.id)
-                    ?.metadata ?? selectedVideo.metadata
+                    ?.metadata ??
+                  justTaggedData?.videos.find(
+                    (video) => video.id === selectedVideo.id
+                  )?.metadata
                 }
               />
             )}
@@ -187,17 +199,6 @@ const VideoList: React.FC = () => {
         )}
       </Modal>
       <FlexContainer>
-        {untaggedData?.videos && (
-          <CardView
-            videos={untaggedData?.videos}
-            selectVideo={setSelectedVideo}
-            selectedVideo={selectedVideo}
-            selectedVideoIds={selectedVideoIds}
-            selectVideoIds={setSelectedVideoIds}
-            formatDate={formatDate}
-            formatFileName={formatFileName}
-          />
-        )}
         <ActionsRow>
           <VideoFilters
             search={searchTerm}
@@ -221,18 +222,26 @@ const VideoList: React.FC = () => {
             }
           />
         </ActionsRow>
-        {/* <ListView
-          videos={data?.videos || []}
-          selectVideo={setSelectedVideo}
-          selectedVideo={selectedVideo}
-          sortBy={setSortBy}
-          order={changeSortDirection}
-          selectedVideoIds={selectedVideoIds}
-          selectVideoIds={setSelectedVideoIds}
-          formatDate={formatDate}
-          formatFileName={formatFileName}
-        /> */}
-
+        {(untaggedData?.videos || justTaggedData?.videos || []).length > 0 && (
+          <>
+            <Header>Recently uploaded</Header>
+            <CardView
+              videos={
+                untaggedData?.videos.concat(justTaggedData?.videos || []) || []
+              }
+              selectVideo={(video: Video) => {
+                if (!video.metadata) setIsEditMode(true);
+                setSelectedVideo(video);
+              }}
+              selectedVideo={selectedVideo}
+              selectedVideoIds={selectedVideoIds}
+              selectVideoIds={setSelectedVideoIds}
+              formatDate={formatDate}
+              formatFileName={formatFileName}
+            />
+          </>
+        )}
+        <Header>Favorites</Header>
         <CardView
           videos={data?.videos || []}
           selectVideo={setSelectedVideo}

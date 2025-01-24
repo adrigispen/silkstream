@@ -1,6 +1,7 @@
 import React from "react";
 import styled from "styled-components";
 import Select, { SingleValue, MultiValue } from "react-select";
+import { Link, useLocation } from "react-router-dom";
 
 const FiltersContainer = styled.div`
   display: flex;
@@ -31,6 +32,21 @@ const TagsSelect = styled(Select<Option, true>)`
   flex-grow: 1;
 `;
 
+const StyledLink = styled(Link)`
+  padding: 10px 16px;
+  background-color: white;
+  border-radius: 4px;
+  border: 1px solid goldenrod;
+  color: darkgoldenrod;
+  text-decoration: none;
+  font-family: sans-serif;
+  font-size: 13px;
+
+  &:hover {
+    background-color: rgb(255, 247, 228);
+  }
+`;
+
 interface Option {
   value: string;
   label: string;
@@ -57,8 +73,14 @@ const VideoFilters: React.FC<VideoFiltersProps> = ({
   categories,
   availableTags,
 }) => {
+  const location = useLocation();
+  const linkUrl = location.pathname === "/" ? "/videos-archive" : "/";
+  const buttonText =
+    location.pathname === "/" ? "View full archive" : "← Back to home";
+
   return (
     <FiltersContainer>
+      <StyledLink to={linkUrl}>{buttonText}</StyledLink>
       <SearchInput
         type="text"
         placeholder="Search all videos..."
