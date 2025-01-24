@@ -16,14 +16,14 @@ const Container = styled.div`
 `;
 
 const VideoWrapper = styled.div`
-  width: 100%;
+  max-width: 100vw;
   position: relative;
   border-radius: 0.5rem;
   overflow: hidden;
 `;
 
 const StyledVideo = styled.video`
-  max-height: 90vh;
+  max-height: 75vh;
   transform: rotate180deg;
   transform-origin: center;
   display: block;

@@ -13,6 +13,8 @@ const Form = styled.form`
   flex-direction: column;
   gap: 1rem;
   padding: 1rem;
+  flex-basis: 200px;
+  flex-grow: 1;
 `;
 
 const FormGroup = styled.div`

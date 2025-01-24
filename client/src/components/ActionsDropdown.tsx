@@ -87,6 +87,7 @@ const BulkUpdateModal = styled.div<{ showModal: boolean }>`
   background-color: white;
   padding: 20px;
   border-radius: 5px;
+  z-index: 10;
 
   box-shadow: 0 3px 5px 0 rgba(0, 0, 0, 0.1);
 `;

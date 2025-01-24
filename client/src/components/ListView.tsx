@@ -33,6 +33,10 @@ const Checkbox = styled.input.attrs({ type: "checkbox" })`
   align-self: center;
   width: 30px;
   margin: -5px;
+
+  @media (max-width: 768px) {
+    display: none;
+  }
 `;
 
 const HeaderRow = styled.div`
@@ -52,17 +56,31 @@ const HeaderTitle = styled.h4`
   width: 25%;
   cursor: pointer;
   margin-left: 30px;
+
+  @media (max-width: 768px) {
+    width: 40%;
+    margin-left: 0px;
+  }
 `;
 
 const VideoTitle = styled.h4`
   width: 25%;
   font-weight: 500;
   margin: 5px 0px;
+
+  @media (max-width: 768px) {
+    width: 40%;
+  }
 `;
 
 const HeaderCategory = styled.span`
   width: 15%;
   cursor: pointer;
+
+  @media (max-width: 768px) {
+    display: none;
+    width: 0%;
+  }
 `;
 
 const Category = styled.span`
@@ -71,10 +89,20 @@ const Category = styled.span`
   text-transform: uppercase;
   font-size: 0.875rem;
   color: #6b7280;
+
+  @media (max-width: 768px) {
+    display: none;
+    width: 0%;
+  }
 `;
 
 const HeaderDescription = styled.span`
   width: 30%;
+
+  @media (max-width: 768px) {
+    display: none;
+    width: 0%;
+  }
 `;
 
 const Description = styled.span`
@@ -83,11 +111,20 @@ const Description = styled.span`
   margin: 5px 0px;
   font-size: 0.875rem;
   color: #6b7280;
+
+  @media (max-width: 768px) {
+    display: none;
+    width: 0%;
+  }
 `;
 
 const HeaderCreatedDate = styled.span`
   width: 10%;
   cursor: pointer;
+
+  @media (max-width: 768px) {
+    width: 30%;
+  }
 `;
 
 const CreatedDate = styled.span`
@@ -95,12 +132,20 @@ const CreatedDate = styled.span`
   color: #6b7280;
   margin: 5px 0px;
   color: #6b7280;
+
+  @media (max-width: 768px) {
+    width: 30%;
+  }
 `;
 
 const HeaderTags = styled.div`
   width: 20%;
   display: flex;
   justify-content: right;
+
+  @media (max-width: 768px) {
+    width: 35%;
+  }
 `;
 
 const Tags = styled.div`
@@ -110,6 +155,10 @@ const Tags = styled.div`
   gap: 0.25rem;
   margin: 5px 0px;
   justify-content: right;
+
+  @media (max-width: 768px) {
+    width: 35%;
+  }
 `;
 
 const Tag = styled.span`
@@ -135,8 +184,8 @@ const ListView: React.FC<ArchiveViewProps> = ({
   formatFileName,
 }) => {
   const videosList = metadata.map((video) => (
-    <LinkWrapper to={`/videos/${encodeURIComponent(video.id)}`}>
-      <VideoRow key={video.id}>
+    <LinkWrapper key={video.id} to={`/videos/${encodeURIComponent(video.id)}`}>
+      <VideoRow>
         <Checkbox
           onClick={(e) => {
             const newSelectedIds = selectedVideoIds.includes(video.id)
@@ -190,7 +239,7 @@ const ListView: React.FC<ArchiveViewProps> = ({
             order();
           }}
         >
-          Created date
+          Created
         </HeaderCreatedDate>
         <HeaderTags>Tags</HeaderTags>
       </HeaderRow>

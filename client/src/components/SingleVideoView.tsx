@@ -10,6 +10,10 @@ const Container = styled.div`
   max-width: 1200px;
   margin: 0 auto;
   padding: 1rem;
+
+  @media (max-width: 768px) {
+    padding: 1rem 0;
+  }
 `;
 
 const StyledLink = styled(Link)`
@@ -32,7 +36,7 @@ const StyledLink = styled(Link)`
 const FlexContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
-  gap: 2rem;
+  gap: 1rem;
   justify-content: center;
 `;
 
