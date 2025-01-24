@@ -289,7 +289,6 @@ export class VideoController {
   checkFavorite = async (req: Request, res: Response): Promise<any> => {
     try {
       const videoId = req.params.videoId;
-      console.log("in check favorite, videoId is", videoId);
       const isFavorited = await this.dynamoService.isFavorited(videoId);
       return res.json({ isFavorited });
     } catch (error) {
@@ -331,8 +330,6 @@ export class VideoController {
   ): Promise<any> => {
     try {
       const videoMetadata = await this.dynamoService.getRecentlyTaggedVideos();
-
-      console.log(videoMetadata);
 
       const videosWithThumbnailsAndUrls = await Promise.all(
         videoMetadata.map(async (data) => ({

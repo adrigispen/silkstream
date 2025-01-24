@@ -449,8 +449,6 @@ export class DynamoService {
           },
         })
       );
-
-      console.log(!!result.Item);
       return !!result.Item;
     } catch (error) {
       console.error("Error checking favorite status:", error);
