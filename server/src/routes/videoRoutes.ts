@@ -30,6 +30,11 @@ export function createVideoRouter(awsServices: AwsServices) {
   router.delete("/videos/:videoId", videoController.deleteVideo);
   router.post("/videos/batch-delete", videoController.batchDeleteVideos);
 
+  router.post(
+    "/videos/:videoId/thumbnail",
+    metadataController.generateThumbnail
+  );
+
   router.post("/videos/:videoId/favorite", videoController.toggleFavorite);
   router.get("/videos/random-favorites", videoController.getRandomFavorites);
   router.get("/videos/:videoId/is-favorite", videoController.checkFavorite);

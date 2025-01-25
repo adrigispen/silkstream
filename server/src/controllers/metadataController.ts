@@ -163,4 +163,25 @@ export class MetadataController {
       return res.status(500).json({ error: "Failed to update videos" });
     }
   };
+
+  generateThumbnail = async (req: Request, res: Response): Promise<any> => {
+    try {
+      const { videoId } = req.params;
+      const thumbnailData = await this.thumbnailService.processVideo(videoId);
+
+      const metadata = {
+        id: videoId,
+        s3Key: videoId,
+        thumbnailKey: thumbnailData.thumbnailKey,
+        createdDate: thumbnailData.createdDate?.toISOString(),
+        duration: thumbnailData.duration,
+        uploadDate: new Date().toISOString(),
+      };
+
+      await this.dynamoService.saveMetadata(metadata);
+    } catch (error) {
+      console.error("Error generating thumbnail: ", error);
+      return res.status(500).json({ error: "Failed to generate thumbnail" });
+    }
+  };
 }

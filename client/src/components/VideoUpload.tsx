@@ -1,6 +1,10 @@
 import React, { useRef } from "react";
 import styled from "styled-components";
-import { api, useGetUploadUrlMutation } from "../services/api";
+import {
+  api,
+  useGenerateThumbnailMutation,
+  useGetUploadUrlMutation,
+} from "../services/api";
 import toast from "react-hot-toast";
 import { useDispatch } from "react-redux";
 
@@ -26,6 +30,7 @@ const HiddenInput = styled.input`
 `;
 const VideoUpload: React.FC = () => {
   const [getUploadUrl] = useGetUploadUrlMutation();
+  const [generateThumbnail] = useGenerateThumbnailMutation();
   const dispatch = useDispatch();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -38,7 +43,7 @@ const VideoUpload: React.FC = () => {
     if (!file) return;
 
     try {
-      const { url } = await getUploadUrl({
+      const { url, key } = await getUploadUrl({
         fileName: file.name,
         fileType: file.type,
       }).unwrap();
@@ -64,6 +69,8 @@ const VideoUpload: React.FC = () => {
       if (!(await uploadPromise).ok) {
         throw new Error("Upload failed");
       }
+
+      await generateThumbnail({ videoKey: key }).unwrap();
 
       // Invalidate and refetch videos after successful S3 upload
       dispatch(api.util.invalidateTags(["Videos"]));

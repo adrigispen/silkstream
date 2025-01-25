@@ -153,6 +153,13 @@ export const api = createApi({
         "Videos",
       ],
     }),
+    generateThumbnail: builder.mutation<void, { videoKey: string }>({
+      query: ({ videoKey }) => ({
+        url: `videos/${encodeURIComponent(videoKey)}/thumbnail`,
+        method: "POST",
+      }),
+      invalidatesTags: ["Videos"],
+    }),
     getUploadUrl: builder.mutation<
       UploadUrlResponse,
       { fileName: string; fileType: string }
@@ -249,4 +256,5 @@ export const {
   useCheckFavoriteQuery,
   useGetUntaggedVideosQuery,
   useGetRecentlyTaggedVideosQuery,
+  useGenerateThumbnailMutation,
 } = api;
