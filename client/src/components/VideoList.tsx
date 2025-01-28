@@ -178,7 +178,10 @@ const VideoList: React.FC = () => {
                 categories={categoriesData?.categories ?? []}
                 metadata={
                   data?.videos.find((video) => video.id === selectedVideo.id)
-                    ?.metadata
+                    ?.metadata ??
+                  justTaggedData?.videos.find(
+                    (video) => video.id === selectedVideo.id
+                  )?.metadata
                 }
                 uploadDate={selectedVideo.lastModified}
                 closeForm={() => setIsEditMode(false)}
@@ -222,7 +225,8 @@ const VideoList: React.FC = () => {
             }
           />
         </ActionsRow>
-        {(untaggedData?.videos || justTaggedData?.videos || []).length > 0 && (
+        {(untaggedData?.videos.concat(justTaggedData?.videos || []) || [])
+          .length > 0 && (
           <>
             <Header>Recently uploaded</Header>
             <CardView

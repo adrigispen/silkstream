@@ -153,9 +153,9 @@ export class DynamoService {
       );
 
       const uniqueCategories = new Set<string>(
-        (result.Items as { category: string }[]).map((record) =>
-          record.category.toLowerCase()
-        )
+        (result.Items as { category: string }[])
+          .filter((i) => i !== undefined)
+          .map((record) => record.category?.toLowerCase())
       );
 
       return [...uniqueCategories];

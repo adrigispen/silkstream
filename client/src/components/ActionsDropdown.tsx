@@ -78,8 +78,8 @@ const Cancel = styled.button`
   }
 `;
 
-const BulkUpdateModal = styled.div<{ showModal: boolean }>`
-  display: ${({ showModal }) => (showModal ? "flex" : "none")};
+const BulkUpdateModal = styled.div<{ showmodal: boolean }>`
+  display: ${({ showmodal }) => (showmodal ? "flex" : "none")};
   position: absolute;
   margin-top: 40px;
   max-width: 210px;
@@ -211,7 +211,7 @@ const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
         </ActionsPanel>
       )}
       {selectedVideoIds.length > 0 && (
-        <BulkUpdateModal showModal={showBulkUpdate}>
+        <BulkUpdateModal showmodal={showBulkUpdate}>
           <FlexContainer>
             <CategorySelect
               placeholder="Change category..."

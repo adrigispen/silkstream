@@ -6,6 +6,7 @@ import { Provider } from "react-redux";
 import { store } from "./store";
 import { PasswordGate } from "./components/PasswordGate";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import Modal from "react-modal";
 import SingleVideoView from "./components/SingleVideoView";
 import ArchiveList from "./components/ArchiveList";
 
@@ -50,6 +51,7 @@ const Image = styled.img`
 `;
 
 function App() {
+  Modal.setAppElement("#root");
   return (
     <Provider store={store}>
       <PasswordGate>
@@ -63,7 +65,7 @@ function App() {
                 <VideoUpload />
               </HeaderContent>
             </Header>
-            <Main>
+            <Main id="root">
               <Routes>
                 <Route path="/" element={<VideoList />} />
                 <Route path="/videos/:videoId" element={<SingleVideoView />} />

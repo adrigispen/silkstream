@@ -15,7 +15,7 @@ interface UploadUrlResponse {
 export const api = createApi({
   reducerPath: "api",
   baseQuery: fetchBaseQuery({ baseUrl: import.meta.env.VITE_API_URL }),
-  tagTypes: ["Videos", "Favorites"],
+  tagTypes: ["Videos", "Favorites", "Untagged", "JustTagged"],
   endpoints: (builder) => ({
     getVideos: builder.query<
       PaginatedResponse<Video>,
@@ -110,13 +110,13 @@ export const api = createApi({
       query: () => ({
         url: "videos-untagged",
       }),
-      providesTags: ["Videos"],
+      providesTags: ["Untagged", "JustTagged"],
     }),
     getRecentlyTaggedVideos: builder.query<{ videos: Video[] }, void>({
       query: () => ({
         url: "videos-just-tagged",
       }),
-      providesTags: ["Videos"],
+      providesTags: ["JustTagged", "Untagged"],
     }),
     getVideoById: builder.query<Video, string>({
       query: (id) => `videos/${encodeURIComponent(id)}`,
@@ -151,6 +151,8 @@ export const api = createApi({
       invalidatesTags: (_result, _error, { videoId }) => [
         { type: "Videos", id: videoId },
         "Videos",
+        "Untagged",
+        "JustTagged",
       ],
     }),
     generateThumbnail: builder.mutation<void, { videoKey: string }>({
@@ -223,10 +225,8 @@ export const api = createApi({
         url: `videos/${encodeURIComponent(videoId)}/favorite`,
         method: "POST",
       }),
-      // Invalidate relevant queries when a favorite is toggled
       invalidatesTags: ["Videos", "Favorites"],
     }),
-
     getRandomFavorites: builder.query<Video[], number | void>({
       query: (limit = 20) => ({
         url: "videos/random-favorites",
