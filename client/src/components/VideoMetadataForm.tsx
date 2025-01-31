@@ -361,10 +361,12 @@ const VideoMetadataForm: React.FC<VideoMetadataFormProps> = ({
               category: value ? value.value : "",
             }))
           }
-          options={categories.map((cat) => ({
-            value: cat.toLowerCase(),
-            label: cat,
-          }))}
+          options={categories
+            .filter((cat) => cat !== null)
+            .map((cat) => ({
+              value: cat.toLowerCase(),
+              label: cat,
+            }))}
         />
       </FormGroup>
 

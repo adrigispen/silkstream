@@ -73,7 +73,16 @@ const VideoUpload: React.FC = () => {
       await generateThumbnail({ videoKey: key }).unwrap();
 
       // Invalidate and refetch videos after successful S3 upload
-      dispatch(api.util.invalidateTags(["Videos"]));
+      dispatch(
+        api.util.invalidateTags([
+          { type: "Video", id: key },
+          { type: "VideoList", id: "LIST" },
+          { type: "Untagged", id: key },
+          { type: "JustTagged", id: key },
+          "Untagged",
+          "JustTagged",
+        ])
+      );
     } catch (error) {
       console.error("Upload error:", error);
     }

@@ -176,6 +176,7 @@ export class MetadataController {
         createdDate: thumbnailData.createdDate?.toISOString(),
         duration: thumbnailData.duration,
         uploadDate: new Date().toISOString(),
+        category: "practice",
       };
 
       await this.dynamoService.saveMetadata(metadata);

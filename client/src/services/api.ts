@@ -12,10 +12,18 @@ interface UploadUrlResponse {
   key: string;
 }
 
+const VIDEO_TAG_TYPES = {
+  VIDEO: "Video",
+  VIDEO_LIST: "VideoList",
+  UNTAGGED: "Untagged",
+  JUST_TAGGED: "JustTagged",
+  FAVORITE: "Favorite",
+} as const;
+
 export const api = createApi({
   reducerPath: "api",
   baseQuery: fetchBaseQuery({ baseUrl: import.meta.env.VITE_API_URL }),
-  tagTypes: ["Videos", "Favorites", "Untagged", "JustTagged"],
+  tagTypes: Object.values(VIDEO_TAG_TYPES),
   endpoints: (builder) => ({
     getVideos: builder.query<
       PaginatedResponse<Video>,
@@ -37,7 +45,16 @@ export const api = createApi({
           limit: params.limit || 10,
         },
       }),
-      providesTags: ["Videos"],
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.videos.map(({ id }) => ({
+                type: VIDEO_TAG_TYPES.VIDEO,
+                id,
+              })),
+              { type: VIDEO_TAG_TYPES.VIDEO_LIST, id: "LIST" },
+            ]
+          : [{ type: VIDEO_TAG_TYPES.VIDEO_LIST, id: "LIST" }],
       merge: (currentCache, newItems, { arg }) => {
         if (!arg?.pageToken) {
           return newItems;
@@ -81,7 +98,7 @@ export const api = createApi({
           limit: params.limit || 20,
         },
       }),
-      providesTags: ["Videos"],
+      providesTags: [VIDEO_TAG_TYPES.VIDEO],
       merge: (currentCache, newItems, { arg }) => {
         if (!arg?.pageToken) {
           return newItems;
@@ -110,18 +127,18 @@ export const api = createApi({
       query: () => ({
         url: "videos-untagged",
       }),
-      providesTags: ["Untagged", "JustTagged"],
+      providesTags: [VIDEO_TAG_TYPES.UNTAGGED],
     }),
     getRecentlyTaggedVideos: builder.query<{ videos: Video[] }, void>({
       query: () => ({
         url: "videos-just-tagged",
       }),
-      providesTags: ["JustTagged", "Untagged"],
+      providesTags: [VIDEO_TAG_TYPES.JUST_TAGGED],
     }),
     getVideoById: builder.query<Video, string>({
       query: (id) => `videos/${encodeURIComponent(id)}`,
       providesTags: (_result, _error, videoId) => [
-        { type: "Videos", id: videoId },
+        { type: VIDEO_TAG_TYPES.VIDEO, id: videoId },
       ],
     }),
     checkFavorite: builder.query<{ isFavorited: boolean }, string>({
@@ -130,13 +147,13 @@ export const api = createApi({
         method: "GET",
       }),
       providesTags: (_result, _error, videoId) => [
-        { type: "Favorites", id: videoId },
+        { type: VIDEO_TAG_TYPES.FAVORITE, id: videoId },
       ],
     }),
     getVideoMetadata: builder.query<VideoMetadata, string>({
       query: (videoId) => `videos/${videoId}/metadata`,
       providesTags: (_result, _error, videoId) => [
-        { type: "Videos", id: videoId },
+        { type: VIDEO_TAG_TYPES.VIDEO, id: videoId },
       ],
     }),
     updateVideoMetadata: builder.mutation<
@@ -149,10 +166,10 @@ export const api = createApi({
         body: metadata,
       }),
       invalidatesTags: (_result, _error, { videoId }) => [
-        { type: "Videos", id: videoId },
-        "Videos",
-        "Untagged",
-        "JustTagged",
+        { type: VIDEO_TAG_TYPES.VIDEO, id: videoId },
+        VIDEO_TAG_TYPES.VIDEO_LIST,
+        VIDEO_TAG_TYPES.UNTAGGED,
+        VIDEO_TAG_TYPES.JUST_TAGGED,
       ],
     }),
     generateThumbnail: builder.mutation<void, { videoKey: string }>({
@@ -160,7 +177,7 @@ export const api = createApi({
         url: `videos/${encodeURIComponent(videoKey)}/thumbnail`,
         method: "POST",
       }),
-      invalidatesTags: ["Videos"],
+      invalidatesTags: [VIDEO_TAG_TYPES.VIDEO_LIST],
     }),
     getUploadUrl: builder.mutation<
       UploadUrlResponse,
@@ -171,7 +188,7 @@ export const api = createApi({
         method: "POST",
         body: body,
       }),
-      invalidatesTags: ["Videos"],
+      invalidatesTags: [VIDEO_TAG_TYPES.VIDEO_LIST, VIDEO_TAG_TYPES.UNTAGGED],
     }),
     getCategories: builder.query<{ categories: string[] }, void>({
       query: () => "categories",
@@ -187,7 +204,11 @@ export const api = createApi({
         url: `videos/${videoId}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["Videos"],
+      invalidatesTags: [
+        VIDEO_TAG_TYPES.VIDEO_LIST,
+        VIDEO_TAG_TYPES.UNTAGGED,
+        VIDEO_TAG_TYPES.JUST_TAGGED,
+      ],
     }),
     batchDeleteVideos: builder.mutation<void, { videoIds: string[] }>({
       query: (payload) => ({
@@ -195,7 +216,11 @@ export const api = createApi({
         method: "POST",
         body: payload,
       }),
-      invalidatesTags: ["Videos"],
+      invalidatesTags: [
+        VIDEO_TAG_TYPES.VIDEO_LIST,
+        VIDEO_TAG_TYPES.UNTAGGED,
+        VIDEO_TAG_TYPES.JUST_TAGGED,
+      ],
     }),
     batchUpsertMetadata: builder.mutation<
       void,
@@ -218,21 +243,33 @@ export const api = createApi({
         method: "POST",
         body: updates,
       }),
-      invalidatesTags: ["Videos"],
+      invalidatesTags: (_result, _error, updates) => [
+        ...updates.map(({ videoId }) => ({
+          type: VIDEO_TAG_TYPES.VIDEO,
+          id: videoId,
+        })),
+        VIDEO_TAG_TYPES.VIDEO_LIST,
+        VIDEO_TAG_TYPES.UNTAGGED,
+        VIDEO_TAG_TYPES.JUST_TAGGED,
+      ],
     }),
     toggleFavorite: builder.mutation<{ isFavorited: boolean }, string>({
       query: (videoId) => ({
         url: `videos/${encodeURIComponent(videoId)}/favorite`,
         method: "POST",
       }),
-      invalidatesTags: ["Videos", "Favorites"],
+      invalidatesTags: [
+        VIDEO_TAG_TYPES.VIDEO_LIST,
+        VIDEO_TAG_TYPES.UNTAGGED,
+        VIDEO_TAG_TYPES.JUST_TAGGED,
+      ],
     }),
     getRandomFavorites: builder.query<Video[], number | void>({
       query: (limit = 20) => ({
         url: "videos/random-favorites",
         params: { limit },
       }),
-      providesTags: ["Favorites"],
+      providesTags: [VIDEO_TAG_TYPES.FAVORITE],
     }),
   }),
 });
